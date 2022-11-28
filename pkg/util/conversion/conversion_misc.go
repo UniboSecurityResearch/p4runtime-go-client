@@ -2,7 +2,6 @@ package conversion
 
 import (
 	"encoding/binary"
-	"fmt"
 	"net"
 )
 
