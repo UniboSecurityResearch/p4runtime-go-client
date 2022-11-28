@@ -8,7 +8,7 @@ import (
 	"time"
 	
 	//log "github.com/sirupsen/logrus"
-	//code "google.golang.org/genproto/googleapis/rpc/code"
+	code "google.golang.org/genproto/googleapis/rpc/code"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
@@ -128,7 +128,7 @@ func (c *Client) Run(
 				return
 			}
 			if err != nil {
-				log.Errorf("Failed to receive a stream message : %v", err)
+				//log.Errorf("Failed to receive a stream message : %v", err)
 				//connStatusCh <- err
 				return
 			}

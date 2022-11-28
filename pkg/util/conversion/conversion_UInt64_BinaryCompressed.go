@@ -2,8 +2,6 @@ package conversion
 
 import (
 	"encoding/binary"
-	"fmt"
-	"net"
 )
 
 func UInt64ToBinaryCompressed(i uint64) ([]byte, error) {
