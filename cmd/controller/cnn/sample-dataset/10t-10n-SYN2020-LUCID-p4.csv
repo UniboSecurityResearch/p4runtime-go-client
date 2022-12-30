@@ -1,0 +1,2 @@
+Model            TIME(sec) ACC    ERR    F1     PPV    TPR    FPR    TNR    FNR    Parameters
+SYN2020-LUCID-p4     0.064 0.9968 0.4151 0.9969 0.9938 1.0000 0.0064 0.9936 0.0000 lr=0.100,b=1024,n=010,t=010,k=001,h=(03,09),m=min

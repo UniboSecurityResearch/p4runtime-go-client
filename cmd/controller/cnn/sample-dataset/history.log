@@ -1,0 +1,2 @@
+2022-08-31 18:13:19 | dataset_type:SYN2020 | flows (tot,ben,ddos):(27862,1664,26198) | fragments (tot,ben,ddos):(27957,1759,26198) | options:--dataset_type SYN2020 --dataset_folder ./sample-dataset/ --packets_per_flow 10 --dataset_id SYN2020 --traffic_type all --time_window 10 --p4_compatible | process_time:50.85711693763733 |
+2022-08-31 18:13:36 | examples (tot,ben,ddos):(3518,1759,1759) | Train/Val/Test sizes: (2849,317,352) | Packets (train,val,test):(15325,1677,1761) | options:--preprocess_folder ./sample-dataset/ |
