@@ -3882,7 +3882,7 @@
             "filename" : "../p4/p4_packet_management_countmin.p4",
             "line" : 194,
             "column" : 16,
-            "source_fragment" : "diff_pkt_cnt > (bit<48>)1000"
+            "source_fragment" : "diff_pkt_cnt > (bit<48>)250"
           },
           "expression" : {
             "type" : "expression",
@@ -3894,7 +3894,7 @@
               },
               "right" : {
                 "type" : "hexstr",
-                "value" : "0x0000000003e8"
+                "value" : "0x0000000000fa"
               }
             }
           },

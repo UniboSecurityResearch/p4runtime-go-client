@@ -1264,7 +1264,7 @@ control MyIngress(inout headers hdr,
             }
 
             //sending the digest if flow is hit
-            if (diff_pkt_cnt > (bit<48>)1000) {
+            if (diff_pkt_cnt > (bit<48>)250) {
                 flow_count_treshold.read(flow_hit, flow0);
                 if(flow_hit == (bit<48>)0) {
                     flow_count_treshold.write(flow0, (bit<48>)1);

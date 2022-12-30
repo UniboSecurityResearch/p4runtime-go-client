@@ -4,7 +4,7 @@
 
 #define SAMPLING 10
 
-#define TRESHOLD 1000
+#define TRESHOLD 250
 //microseconds
 #define WINDOW_SIZE 30000000
 
