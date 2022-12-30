@@ -42,7 +42,7 @@ Then you need to open another terminal window, and then start the cnn
 # from the root of the directory
 $ cd ./cmd/controller/cnn
 $ conda activate python38
-(python48)$ ./lucid.sh
+(python38)$ ./lucid.sh
 ```
 
 Then you need to go back on the Mininet window, and then start an attack
