@@ -36,4 +36,19 @@ At this point everything should work, you can test it by going into the mininet 
 mininet> pingall
 ```
 
+Then you need to open another terminal window, and then start the cnn
+
+```bash
+# from the root of the directory
+$ cd ./cmd/controller/cnn
+$ conda activate python38
+(python48)$ ./lucid.sh
+```
+
+Then you need to go back on the Mininet window, and then start an attack
+
+```bash
+mininet> h1 hping3 -a 11.0.0.1 --faster 10.42.0.2
+```
+
 Then you can connect to localhost:3333 via http to interact with the server via the UI
