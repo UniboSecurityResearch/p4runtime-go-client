@@ -48,6 +48,10 @@ func (flow *Flow) GetVictim() net.IP {
 	return flow.Victim
 }
 
+func (flow *Flow) GetDropped() bool {
+    return flow.Dropped
+}
+
 func (flow *Flow) isDropped() bool {
     return flow.Dropped
 }
@@ -58,6 +62,10 @@ func (flow *Flow) DropFlow() {
 
 func (flow *Flow) UndropFlow() {
     flow.Dropped = false
+}
+
+func (flow *Flow) SetDropped(dropped bool) {
+    flow.Dropped = dropped
 }
 
 
@@ -159,7 +167,7 @@ func (sh *StateHandler) IsFlowDropped(flow Flow) bool{ //returns if flow was dro
             return f.Dropped
         }
     }
-    return false
+    return true //so it ignores if is not present
 }
 
 func (sh *StateHandler) GetDigests() []Digest{ //returns list of current suspect DDoS flows 
@@ -199,9 +207,14 @@ func (sh *StateHandler) ResetSuspectFlow() {
         sh.suspectFlows = suspectFlows
 }
 
-func (sh *StateHandler) ResetPhaseTwo(currentStartingFrameTime int64) {
+func (sh *StateHandler) ResetPhaseOne() {
     sh.digests = []Digest{}
     sh.ResetSuspectFlow()
+    sh.currentStartingFrameTime = time.Now().Unix()
+}
+
+func (sh *StateHandler) ResetPhaseTwo(currentStartingFrameTime int64) {
+    sh.digests = []Digest{}
     sh.currentStartingFrameTime = currentStartingFrameTime
 }
 
@@ -222,5 +235,14 @@ func (sh *StateHandler) UpdateSuspectFlow(flow Flow) {
         }
         sh.suspectFlows = suspectFlows
     }
+}
+
+func (sh *StateHandler) GetFlowCorrespondingToArgument(flow Flow) Flow{
+    for _,f := range sh.suspectFlows{
+            if AreTheSameFlow(flow,f) {
+                return f
+            }
+    }
+    return Flow{Attacker: flow.GetAttacker(), Victim: flow.GetVictim()}
 }
 

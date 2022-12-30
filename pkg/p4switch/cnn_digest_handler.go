@@ -66,12 +66,12 @@ func (sw *GrpcSwitch) handleDigestForCNN(ctx context.Context, digestList *p4_v1.
 				}
 				stateHandler.AddDigest(digest)
 			}else{
-				sw.log.Infof("NUMBER of DIGESTS registered: %d",len(stateHandler.GetDigests()))
+				sw.log.Infof("PHASE 1 - NUMBER of DIGESTS registered in this TIME FRAME: %d",len(stateHandler.GetDigests()))
 				sw.RealTimeReconfiguration(ctx)
 				for _, flow := range stateHandler.GetSuspectFlows() {
 					sw.AddFlowToMonitorRules(ctx, flow)
 				}
-				stateHandler.Reset()
+				stateHandler.ResetPhaseOne()
 			}
 		}
 		if mode == 1 && sw.GetNameOfPipeline() == "p4_packet_management_countmin.p4"{	
@@ -92,9 +92,10 @@ func (sw *GrpcSwitch) handleDigestForCNN(ctx context.Context, digestList *p4_v1.
 				stateHandler.AddDigest(digest)	
 			}else{
 				if(time.Now().Unix() - stateHandler.currentStartingFrameTime > 30){
-					sw.log.Infof("NUMBER of DIGESTS registered: %d",len(stateHandler.GetDigests()))
+					sw.log.Infof("PHASE 2 - NUMBER of DIGESTS registered in this TIME FRAME: %d",len(stateHandler.GetDigests()))
 					if( len(stateHandler.GetDigests()) == 0 ){
 						sw.RealTimeReconfiguration(ctx)
+						stateHandler.Reset()
 					}		
 					currentStartingTime := stateHandler.currentStartingFrameTime + 30
 					stateHandler.ResetPhaseTwo(currentStartingTime)

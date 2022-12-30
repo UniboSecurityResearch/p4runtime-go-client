@@ -30,6 +30,9 @@ func DropFlow(stateHandler *p4switch.StateHandler, switches []*p4switch.GrpcSwit
 					reqBody, _ := ioutil.ReadAll(r.Body)
 				    var flow p4switch.Flow 
 				    json.Unmarshal(reqBody, &flow)
+				    //flowSaved := stateHandler.GetFlowCorrespondingToArgument(flow)
+				    //stringDebug := fmt.Sprintf("DROP FLOW - Dropped: %t Flow (src -> dst) %s -> %s\n", flowSaved.GetDropped(), flowSaved.GetAttacker().String(), flowSaved.GetVictim().String())
+					//fmt.Printf(stringDebug)
 					if(stateHandler.IsFlowDropped(flow) == false){
 						for _,sw := range switches{
 					    	//drop/undrop rules coming from CNN must be listened only on the second phase
@@ -38,8 +41,8 @@ func DropFlow(stateHandler *p4switch.StateHandler, switches []*p4switch.GrpcSwit
 					    	}
 					    }
 					    flow.DropFlow()
-					}
-				    stateHandler.UpdateSuspectFlow(flow)
+						stateHandler.UpdateSuspectFlow(flow)
+					}				    
 				    json.NewEncoder(w).Encode(flow)
 				}
 }
@@ -49,6 +52,10 @@ func UpdateDroppedFlow(stateHandler *p4switch.StateHandler) func(w http.Response
 					reqBody, _ := ioutil.ReadAll(r.Body)
 				    var flow p4switch.Flow 
 				    json.Unmarshal(reqBody, &flow)
+				    flowSaved := stateHandler.GetFlowCorrespondingToArgument(flow)
+				    //stringDebug := fmt.Sprintf("UPDATE FLOW - Dropped: %t Flow (src -> dst) %s -> %s\n", flowSaved.GetDropped(), flowSaved.GetAttacker().String(), flowSaved.GetVictim().String())
+				    //fmt.Printf(stringDebug)
+				    flow.SetDropped(flowSaved.GetDropped()) //to keep track of dropped flows
 				    stateHandler.UpdateSuspectFlow(flow)
 				    json.NewEncoder(w).Encode(flow)
 				}
@@ -67,8 +74,8 @@ func UndropFlow(stateHandler *p4switch.StateHandler, switches []*p4switch.GrpcSw
 					    	}
 					    }
 					    flow.UndropFlow()
+					    stateHandler.UpdateSuspectFlow(flow)
 					}
-				    stateHandler.UpdateSuspectFlow(flow)
 				    json.NewEncoder(w).Encode(flow)
 				}	
 }
