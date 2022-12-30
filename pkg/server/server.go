@@ -67,9 +67,9 @@ func StartServer(switches []*p4switch.GrpcSwitch, topology string, stateHandler 
 
 	http.HandleFunc("/getSuspectFlows", GetSuspectFlows(stateHandler))
 	http.HandleFunc("/getCollectedDigests", GetCollectedDigests(stateHandler))
-	http.HandleFunc("/dropFlow", DropFlow(stateHandler))
+	http.HandleFunc("/dropFlow", DropFlow(stateHandler, switches, ctx_dummy))
 	http.HandleFunc("/updateDroppedFlow", UpdateDroppedFlow(stateHandler))
-	http.HandleFunc("/undropFlow", UndropFlow(stateHandler))
+	http.HandleFunc("/undropFlow", UndropFlow(stateHandler, switches, ctx_dummy))
 
 	http.Handle("/web/", http.StripPrefix("/web/", http.FileServer(http.Dir(serverPath+"web"))))
 

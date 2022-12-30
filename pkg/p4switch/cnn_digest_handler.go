@@ -97,8 +97,7 @@ func (sw *GrpcSwitch) handleDigestForCNN(ctx context.Context, digestList *p4_v1.
 						sw.RealTimeReconfiguration(ctx)
 					}		
 					currentStartingTime := stateHandler.currentStartingFrameTime + 30
-					stateHandler.Reset()
-					stateHandler.currentStartingFrameTime = currentStartingTime
+					stateHandler.ResetPhaseTwo(currentStartingTime)
 				} 
 			}
 		}

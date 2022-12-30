@@ -153,6 +153,15 @@ func (sh *StateHandler) GetSuspectFlows() []Flow{ //returns list of current susp
     return sh.suspectFlows
 }
 
+func (sh *StateHandler) IsFlowDropped(flow Flow) bool{ //returns if flow was dropped 
+    for _,f := range sh.suspectFlows{
+        if(AreTheSameFlow(f,flow) == true){
+            return f.Dropped
+        }
+    }
+    return false
+}
+
 func (sh *StateHandler) GetDigests() []Digest{ //returns list of current suspect DDoS flows 
     return sh.digests
 }
@@ -181,19 +190,37 @@ func (sh *StateHandler) RemoveSuspectFlow(flow Flow) {
     }
 }
 
+func (sh *StateHandler) ResetSuspectFlow() {
+    suspectFlows := []Flow{}
+        for _,f := range sh.suspectFlows{
+            f.Dropped = false
+            suspectFlows = append(suspectFlows,f)
+        }
+        sh.suspectFlows = suspectFlows
+}
+
+func (sh *StateHandler) ResetPhaseTwo(currentStartingFrameTime int64) {
+    sh.digests = []Digest{}
+    sh.ResetSuspectFlow()
+    sh.currentStartingFrameTime = currentStartingFrameTime
+}
+
 func (sh *StateHandler) Reset() {
     sh.digests = []Digest{}
     sh.suspectFlows = []Flow{}
     sh.currentStartingFrameTime = time.Now().Unix()
 }
 
+
 func (sh *StateHandler) UpdateSuspectFlow(flow Flow) {
-    suspectFlows := []Flow{}
-    for _,f := range sh.suspectFlows{
-        if AreTheSameFlow(flow,f) {
-            suspectFlows = append(suspectFlows,flow)
+    if(Contains(sh.suspectFlows, flow) == true){
+        suspectFlows := []Flow{}
+        for _,f := range sh.suspectFlows{
+            if AreTheSameFlow(flow,f) {
+                suspectFlows = append(suspectFlows,flow)
+            }
         }
+        sh.suspectFlows = suspectFlows
     }
-    sh.suspectFlows = suspectFlows
 }
 
