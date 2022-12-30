@@ -1,21 +1,18 @@
-p4config = ./config/config.yml
-p4config-topo = ./config/topology.json
-singlesw-config = ./config/singlesw-config.yml
-singlesw-topo = ./config/singlesw-topo.json
-3sw-config = ./config/3sw-config.yml
-3sw-topo = ./config/3sw-topology.json
+p4config = config/config.yml
+p4config-alt = config/config-alt.yml
+singlesw-config = config/singlesw-config.yml
+singlesw-alt = config/singlesw-config-alt.yml
+
 
 all: singlesw
 singlesw:
-	go run ./main.go -n 1 -config $(singlesw-config) -topology $(singlesw-topo) -verbose
-3sw:
-	go run ./main.go -n 2 -config $(3sw-config) -topology $(3sw-topo) -verbose
+	go run main.go -n 1 -config $(singlesw-config) -config-alt $(singlesw-alt) -verbose
 debug:
-	go run ./main.go -n 4 -config $(p4config) -topology $(p4config-topo) -verbose
+	go run main.go -n 4 -config $(p4config) -config-alt $(p4config-alt) -verbose
 trace:
-	go run ./main.go -n 4 -config $(p4config) -topology $(p4config-topo) -trace
+	go run main.go -n 4 -config $(p4config) -config-alt $(p4config-alt) -trace
 prod:
-	go run ./main.go -n 4 -config $(p4config) -topology $(p4config-topo)
+	go run main.go -n 4 -config $(p4config) -config-alt $(p4config-alt)
 tls:
-	go run ./main.go -n 4 -config $(p4config) -topology $(p4config-topo) -cert-file /tmp/cert.pem -verbose
+	go run main.go -n 4 -config $(p4config) -config-alt $(p4config-alt) -cert-file /tmp/cert.pem -verbose
 

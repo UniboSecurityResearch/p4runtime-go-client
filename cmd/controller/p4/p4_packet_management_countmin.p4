@@ -4,7 +4,7 @@
 
 #define SAMPLING 10
 
-#define TRESHOLD 250
+#define TRESHOLD 1000
 //microseconds
 #define WINDOW_SIZE 30000000
 
@@ -17,26 +17,18 @@ typedef bit<32> ip4Addr_t;
 
 #include "includes/headers.p4"
 
+//#include "includes/registers.p4"
+
 #include "includes/parser.p4"
 
-
-/*************************************************************************
-************   C H E C K S U M    V E R I F I C A T I O N   *************
-*************************************************************************/
-
-control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
+control MyVerifyChecksum(inout headers hdr, inout metadata meta) {   
     apply {  }
 }
 
 
-/*************************************************************************
-**************  I N G R E S S   P R O C E S S I N G   *******************
-*************************************************************************/
-
 control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
-
     register<bit<48>>(1024) pkt_count_0;
     register<bit<48>>(1024) pkt_count_1;
     register<bit<48>>(1024) flow_count_treshold;
@@ -48,34 +40,26 @@ control MyIngress(inout headers hdr,
         exit;
     }
 
-    action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
-        standard_metadata.egress_spec = port;
-        hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
-        hdr.ethernet.dstAddr = dstAddr;
-        hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
-    }
-
     action send_digest() {
         digest<digest_t>(0, {
-                0,
-                meta.ingress_timestamp,
-                meta.packet_length, 
-                meta.ip_flags,
-                meta.tcp_len,
-                meta.tcp_ack,
-                meta.tcp_flags,
-                meta.tcp_window_size,
-                meta.udp_len,
-                meta.icmp_type,
-                meta.srcPort,
-                meta.dstPort,
-                meta.src_ip,
-                meta.dst_ip,
-                meta.ip_upper_protocol,
-                meta.swap,
-                meta.hitorsuspect});
+            1,
+            meta.ingress_timestamp,
+            meta.packet_length, 
+            meta.ip_flags,
+            meta.tcp_len,
+            meta.tcp_ack,
+            meta.tcp_flags,
+            meta.tcp_window_size,
+            meta.udp_len,
+            meta.icmp_type,
+            meta.srcPort,
+            meta.dstPort,
+            meta.src_ip,
+            meta.dst_ip,
+            meta.ip_upper_protocol,
+            meta.swap,
+            meta.hitorsuspect});
     }
-
 
     action find_min(bit<48> pkt_cnt0, bit<48> pkt_cnt1, bit<48> pkt_cnt_opp0, bit<48> pkt_cnt_opp1){
 
@@ -94,6 +78,13 @@ control MyIngress(inout headers hdr,
         }  
     }
 
+    action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
+        standard_metadata.egress_spec = port;
+        hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
+        hdr.ethernet.dstAddr = dstAddr;
+        hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
+    }
+
     table ipv4_lpm {
         key = {
             hdr.ipv4.dstAddr: lpm;
@@ -108,7 +99,36 @@ control MyIngress(inout headers hdr,
         default_action = NoAction();
     }
 
+    table ipv4_tag_and_drop {
+        key = {
+            hdr.ipv4.srcAddr: exact;
+            hdr.ipv4.dstAddr: exact;
+        }
+        actions = {
+            //drop;
+            NoAction;
+        }
+        size = 1024;
+        support_timeout = true;
+        default_action = NoAction();
+    }    
+
+    table ipv4_drop {
+        key = {
+            hdr.ipv4.srcAddr: exact;
+            hdr.ipv4.dstAddr: exact;
+        }
+        actions = {
+            NoAction;
+            drop;
+        }
+        size = 1024;
+        support_timeout = true;
+        default_action = NoAction();
+    }       
+
     apply {
+
         if (hdr.ipv4.isValid()) {
             ipv4_lpm.apply();
 
@@ -161,6 +181,8 @@ control MyIngress(inout headers hdr,
             last_pkt_cnt0 = meta.min_flow;
             last_pkt_cnt_opp0 = meta.min_flow_opp;
 
+            meta.swap = (bit<16>) 0;
+
             //calculating the difference
             if (last_pkt_cnt0 > last_pkt_cnt_opp0) {
                 diff_pkt_cnt = last_pkt_cnt0 - last_pkt_cnt_opp0 + 1;
@@ -173,8 +195,7 @@ control MyIngress(inout headers hdr,
                 flow_count_treshold.read(flow_hit,     flow0);
                 if(flow_hit == (bit<48>)0) {
                     flow_count_treshold.write(flow0, (bit<48>)1);
-                    meta.hitorsuspect = 2; 
-                    //send_digest();
+                    meta.hitorsuspect = (bit<16>) 2;
                 }
             }
 
@@ -184,7 +205,7 @@ control MyIngress(inout headers hdr,
             diff_time = standard_metadata.ingress_global_timestamp - last_time;
 
             //checking if the window is expired
-            if (diff_time > (bit<48>)WINDOW_SIZE) {
+            if (diff_time > WINDOW_SIZE) {
                 
                 //resetting the flow counters
                 pkt_count_0.write(flow0,(bit<48>)0);
@@ -195,11 +216,14 @@ control MyIngress(inout headers hdr,
                 //only updating the first flow
                 last_seen.write(flow0,standard_metadata.ingress_global_timestamp);
 
-                //sending swap signal
-                meta.swap = 1;    
-                //send_digest();      
+                meta.swap = 1;
             }
 
+            if(ipv4_tag_and_drop.apply().hit){
+                meta.hitorsuspect = 1;
+            }   
+            
+            //ipv4_drop.apply();
             if(count == SAMPLING){
                 send_digest();
                 count_sample.write(0, 0);
@@ -207,28 +231,45 @@ control MyIngress(inout headers hdr,
             if(meta.swap == 1 || meta.hitorsuspect == 2){
                 send_digest();
             }
-        }
-    }
-}
+            
+        }// valid ipv4_address
+    }// apply
+}// MyIngress
 
 /*************************************************************************
 ****************  E G R E S S   P R O C E S S I N G   *******************
 *************************************************************************/
-register<bit<48>>(2) latencyReg;
+
 control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
-    apply { 
-        bit<48> latency;
-        bit<48> counterLatency;
-        if(hdr.ipv4.isValid()){
-            latencyReg.read(latency, 0);
-            latencyReg.write(0, latency + standard_metadata.egress_global_timestamp - standard_metadata.ingress_global_timestamp);
-            latencyReg.read(counterLatency, 1);
-            latencyReg.write(1, counterLatency + (bit<48>)1);
-        }
+    action drop() {
+        mark_to_drop(standard_metadata);
+        exit;
     }
-}
+
+    table ipv4_drop {
+        key = {
+            hdr.ipv4.srcAddr: exact;
+            hdr.ipv4.dstAddr: exact;
+        }
+        actions = {
+            NoAction;
+            drop;
+        }
+        size = 1024;
+        support_timeout = true;
+        default_action = NoAction();
+    } 
+
+    apply {       
+
+        if (hdr.ipv4.isValid()) {
+            ipv4_drop.apply();                  
+        }// valid ipv4_address
+
+    }
+}//MyEgress
 
 /*************************************************************************
 *************   C H E C K S U M    C O M P U T A T I O N   **************
@@ -251,12 +292,14 @@ control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
               hdr.ipv4.dstAddr },
             hdr.ipv4.hdrChecksum,
             HashAlgorithm.csum16);
-    }
+    } 
 }
 
 /*************************************************************************
 ***********************  D E P A R S E R  *******************************
 *************************************************************************/
+
+
 
 control MyDeparser(packet_out packet, in headers hdr) {
     apply {
@@ -265,6 +308,7 @@ control MyDeparser(packet_out packet, in headers hdr) {
         packet.emit(hdr.icmp);
         packet.emit(hdr.udp);
         packet.emit(hdr.tcp);
+        
     }
 }
 

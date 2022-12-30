@@ -22,12 +22,77 @@ tables {
   size: 1024
   idle_timeout_behavior: NOTIFY_CONTROL
 }
+tables {
+  preamble {
+    id: 38241600
+    name: "MyIngress.ipv4_tag_and_drop"
+    alias: "ipv4_tag_and_drop"
+  }
+  match_fields {
+    id: 1
+    name: "hdr.ipv4.srcAddr"
+    bitwidth: 32
+    match_type: EXACT
+  }
+  match_fields {
+    id: 2
+    name: "hdr.ipv4.dstAddr"
+    bitwidth: 32
+    match_type: EXACT
+  }
+  action_refs {
+    id: 21257015
+  }
+  size: 1024
+  idle_timeout_behavior: NOTIFY_CONTROL
+}
+tables {
+  preamble {
+    id: 44171042
+    name: "MyEgress.ipv4_drop"
+    alias: "ipv4_drop"
+  }
+  match_fields {
+    id: 1
+    name: "hdr.ipv4.srcAddr"
+    bitwidth: 32
+    match_type: EXACT
+  }
+  match_fields {
+    id: 2
+    name: "hdr.ipv4.dstAddr"
+    bitwidth: 32
+    match_type: EXACT
+  }
+  action_refs {
+    id: 21257015
+  }
+  action_refs {
+    id: 20880156
+  }
+  size: 1024
+  idle_timeout_behavior: NOTIFY_CONTROL
+}
 actions {
   preamble {
     id: 21257015
     name: "NoAction"
     alias: "NoAction"
     annotations: "@noWarn(\"unused\")"
+  }
+}
+actions {
+  preamble {
+    id: 23592486
+    name: "MyIngress.send_digest"
+    alias: "send_digest"
+  }
+}
+actions {
+  preamble {
+    id: 27629954
+    name: "MyIngress.find_min"
+    alias: "find_min"
   }
 }
 actions {
@@ -49,32 +114,10 @@ actions {
 }
 actions {
   preamble {
-    id: 23592486
-    name: "MyIngress.send_digest"
-    alias: "send_digest"
+    id: 20880156
+    name: "MyEgress.drop"
+    alias: "drop"
   }
-}
-actions {
-  preamble {
-    id: 27629954
-    name: "MyIngress.find_min"
-    alias: "find_min"
-  }
-}
-registers {
-  preamble {
-    id: 377690673
-    name: "latencyReg"
-    alias: "latencyReg"
-  }
-  type_spec {
-    bitstring {
-      bit {
-        bitwidth: 48
-      }
-    }
-  }
-  size: 2
 }
 registers {
   preamble {

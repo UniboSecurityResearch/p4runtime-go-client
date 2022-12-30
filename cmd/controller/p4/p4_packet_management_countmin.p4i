@@ -1,7 +1,7 @@
-# 1 "../p4/asymmetric.p4"
+# 1 "../p4/p4_packet_management_countmin.p4"
 # 1 "<built-in>"
 # 1 "<command-line>"
-# 1 "../p4/asymmetric.p4"
+# 1 "../p4/p4_packet_management_countmin.p4"
 /* -*- P4_16 -*- */
 # 1 "/usr/share/p4c/p4include/core.p4" 1
 /*
@@ -86,7 +86,7 @@ match_kind {
     /// Longest-prefix match.
     lpm
 }
-# 3 "../p4/asymmetric.p4" 2
+# 3 "../p4/p4_packet_management_countmin.p4" 2
 # 1 "/usr/share/p4c/p4include/v1model.p4" 1
 /*
 Copyright 2013-present Barefoot Networks, Inc.
@@ -872,9 +872,10 @@ package V1Switch<H, M>(Parser<H, M> p,
                        ComputeChecksum<H, M> ck,
                        Deparser<H> dep
                        );
-# 4 "../p4/asymmetric.p4" 2
+# 4 "../p4/p4_packet_management_countmin.p4" 2
 
-const bit<16> TYPE_IPV4 = 0x800;
+
+
 
 //microseconds
 
@@ -882,17 +883,14 @@ const bit<16> TYPE_IPV4 = 0x800;
 
 
 
-/*************************************************************************
-*********************** H E A D E R S  ***********************************
-*************************************************************************/
-
 typedef bit<9> egressSpec_t;
 typedef bit<48> macAddr_t;
 typedef bit<32> ip4Addr_t;
 
+# 1 "../p4/includes/headers.p4" 1
 header ethernet_t {
-    macAddr_t dstAddr;
-    macAddr_t srcAddr;
+    bit<48> dstAddr;
+    bit<48> srcAddr;
     bit<16> etherType;
 }
 
@@ -907,30 +905,115 @@ header ipv4_t {
     bit<8> ttl;
     bit<8> protocol;
     bit<16> hdrChecksum;
-    ip4Addr_t srcAddr;
-    ip4Addr_t dstAddr;
-    ip4Addr_t realsrcAddr;
-    ip4Addr_t realdstAddr;
+    bit<32> srcAddr;
+    bit<32> dstAddr;
 }
 
-struct metadata {
+
+
+header tcp_t{
+    bit<16> srcPort;
+    bit<16> dstPort;
+    bit<32> seqNo;
+    bit<32> ackNo;
+    bit<4> dataOffset;
+    bit<3> res;
+    bit<9> tcp_flags;
+    bit<16> window;
+    bit<16> checksum;
+    bit<16> urgentPtr;
 }
+
+header udp_t {
+    bit<16> srcPort;
+    bit<16> dstPort;
+    bit<16> udplen;
+    bit<16> udpchk;
+}
+
+header icmp_t {
+    bit<8> type;
+    bit<8> code;
+    bit<16> checksum;
+}
+
 
 struct headers {
     ethernet_t ethernet;
     ipv4_t ipv4;
+    tcp_t tcp;
+    udp_t udp;
+    icmp_t icmp;
+}
+
+
+// ==================== LUCID ========================
+
+struct metadata {
+
+   // features
+   bit<48> ingress_timestamp;
+   bit<16> packet_length;
+   bit<16> ip_flags;
+   bit<16> tcp_len;
+   bit<32> tcp_ack;
+   bit<9> tcp_flags;
+   bit<16> tcp_window_size;
+   bit<16> udp_len;
+   bit<8> icmp_type;
+
+   //flow id
+   bit<16> srcPort;
+   bit<16> dstPort;
+   bit<32> src_ip;
+   bit<32> dst_ip;
+   bit<8> ip_upper_protocol;
+
+   //change config
+   bit<16> swap;
+
+   bit<48> min_flow;
+   bit<48> min_flow_opp;
+
+   bit<16> hitorsuspect;
 }
 
 struct digest_t {
-    ip4Addr_t srcAddr;
-    ip4Addr_t dstAddr;
-    bit<9> srcPort;
-    bit<9> dstPort;
-    bit<48> pkt_count;
+
+   bit<16> type; //=1, LUCID
+
+   // features
+   bit<48> ingress_timestamp;
+   bit<16> packet_length;
+   bit<16> ip_flags;
+   bit<16> tcp_len;
+   bit<32> tcp_ack;
+   bit<9> tcp_flags;
+   bit<16> tcp_window_size;
+   bit<16> udp_len;
+   bit<8> icmp_type;
+
+   //flow id
+   bit<16> srcPort;
+   bit<16> dstPort;
+   bit<32> src_ip;
+   bit<32> dst_ip;
+   bit<8> ip_upper_protocol;
+
+   //change config
+   bit<16> swap;
+
+   //hit or not, for ML -> Stage 1: it means if the digest needs to be trated as supect, 
+   //                      Stage 2: it means if the digest must be trated as prefiltered    //                               traffic or not prefiltered  
+   //                      =0 -> normal mirror, =1 -> hit, =2 -> suspect
+   bit<16> hitorsuspect;
+
 }
-/*************************************************************************
-*********************** P A R S E R  ***********************************
-*************************************************************************/
+# 19 "../p4/p4_packet_management_countmin.p4" 2
+
+//#include "includes/registers.p4"
+
+# 1 "../p4/includes/parser.p4" 1
 
 parser MyParser(packet_in packet,
                 out headers hdr,
@@ -944,41 +1027,128 @@ parser MyParser(packet_in packet,
     state parse_ethernet {
         packet.extract(hdr.ethernet);
         transition select(hdr.ethernet.etherType) {
-            TYPE_IPV4: parse_ipv4;
+            0x800: parse_ipv4;
             default: accept;
         }
     }
 
     state parse_ipv4 {
         packet.extract(hdr.ipv4);
+
+        meta.ingress_timestamp=standard_metadata.ingress_global_timestamp;
+        meta.packet_length=hdr.ipv4.totalLen;
+        meta.ip_flags=hdr.ipv4.flags++hdr.ipv4.fragOffset;
+        meta.tcp_len=16w0;
+        meta.tcp_ack=32w0;
+        meta.tcp_flags=9w0;
+        meta.tcp_window_size=16w0;
+        meta.udp_len=16w0;
+        meta.icmp_type=8w0;
+
+        meta.srcPort=16w0;
+        meta.dstPort=16w0;
+        meta.src_ip=hdr.ipv4.srcAddr;
+        meta.dst_ip=hdr.ipv4.dstAddr;
+        meta.ip_upper_protocol=hdr.ipv4.protocol;
+
+        transition select(hdr.ipv4.protocol) {
+            8w0x1: parse_icmp;
+            8w0x6: parse_tcp;
+            8w0x11: parse_udp;
+            default: accept;
+        }
+    }
+
+    state parse_icmp {
+        packet.extract(hdr.icmp);
+        meta.icmp_type=hdr.icmp.type;
+
         transition accept;
     }
 
-}
+    state parse_tcp {
+       packet.extract(hdr.tcp);
 
-/*************************************************************************
-************   C H E C K S U M    V E R I F I C A T I O N   *************
-*************************************************************************/
+       bit<16> ip_header_len = ((bit<16>) hdr.ipv4.ihl) << 2; // x * 32 / 8 --> 1World=32 bit, but i need bytes
+       bit<16> tcp_header_len = ((bit<16>) hdr.tcp.dataOffset) << 2; // x * 32 / 8 --> 1World=32 bit, but i need bytes
+       meta.tcp_len=hdr.ipv4.totalLen - ip_header_len - tcp_header_len;
+
+       meta.tcp_ack=hdr.tcp.ackNo;
+       meta.tcp_flags=hdr.tcp.tcp_flags;
+       meta.tcp_window_size=hdr.tcp.window;
+
+       meta.srcPort=hdr.tcp.srcPort;
+       meta.dstPort=hdr.tcp.dstPort;
+
+       transition accept;
+    }
+
+    state parse_udp {
+       packet.extract(hdr.udp);
+       meta.udp_len=hdr.udp.udplen;
+       meta.srcPort=hdr.udp.srcPort;
+       meta.dstPort=hdr.udp.dstPort;
+       transition accept;
+    }
+
+}
+# 23 "../p4/p4_packet_management_countmin.p4" 2
 
 control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
     apply { }
 }
 
 
-/*************************************************************************
-**************  I N G R E S S   P R O C E S S I N G   *******************
-*************************************************************************/
-
 control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
-
-    register<bit<48>>(1024) pkt_count;
+    register<bit<48>>(1024) pkt_count_0;
+    register<bit<48>>(1024) pkt_count_1;
+    register<bit<48>>(1024) flow_count_treshold;
     register<bit<48>>(1024) last_seen;
+    register<bit<16>>(1024) count_sample;
 
     action drop() {
         mark_to_drop(standard_metadata);
         exit;
+    }
+
+    action send_digest() {
+        digest<digest_t>(0, {
+            1,
+            meta.ingress_timestamp,
+            meta.packet_length,
+            meta.ip_flags,
+            meta.tcp_len,
+            meta.tcp_ack,
+            meta.tcp_flags,
+            meta.tcp_window_size,
+            meta.udp_len,
+            meta.icmp_type,
+            meta.srcPort,
+            meta.dstPort,
+            meta.src_ip,
+            meta.dst_ip,
+            meta.ip_upper_protocol,
+            meta.swap,
+            meta.hitorsuspect});
+    }
+
+    action find_min(bit<48> pkt_cnt0, bit<48> pkt_cnt1, bit<48> pkt_cnt_opp0, bit<48> pkt_cnt_opp1){
+
+        //MIN of FLOW
+        if(pkt_cnt0 > pkt_cnt1){
+            meta.min_flow = pkt_cnt1;
+        } else{
+            meta.min_flow = pkt_cnt0;
+        }
+
+        //MIN of FLOW OPP
+        if(pkt_cnt_opp0 > pkt_cnt_opp1){
+            meta.min_flow_opp = pkt_cnt_opp1;
+        } else{
+            meta.min_flow_opp = pkt_cnt_opp0;
+        }
     }
 
     action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
@@ -988,27 +1158,38 @@ control MyIngress(inout headers hdr,
         hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
     }
 
-    action send_digest(bit<48> flow_pkt_count) {
-        digest<digest_t>(0, {hdr.ipv4.srcAddr, hdr.ipv4.dstAddr, standard_metadata.ingress_port ,standard_metadata.egress_spec, flow_pkt_count});
-    }
-
     table ipv4_lpm {
         key = {
             hdr.ipv4.dstAddr: lpm;
         }
         actions = {
             ipv4_forward;
-            drop;
+            //drop;
             NoAction;
         }
         size = 1024;
         support_timeout = true;
-        default_action = drop();
+        default_action = NoAction();
+    }
+
+    table ipv4_tag_and_drop {
+        key = {
+            hdr.ipv4.srcAddr: exact;
+            hdr.ipv4.dstAddr: exact;
+        }
+        actions = {
+            //drop;
+            NoAction;
+        }
+        size = 1024;
+        support_timeout = true;
+        default_action = NoAction();
     }
 
     table ipv4_drop {
         key = {
             hdr.ipv4.srcAddr: exact;
+            hdr.ipv4.dstAddr: exact;
         }
         actions = {
             NoAction;
@@ -1020,47 +1201,113 @@ control MyIngress(inout headers hdr,
     }
 
     apply {
+
         if (hdr.ipv4.isValid()) {
             ipv4_lpm.apply();
-            ipv4_drop.apply();
 
-            bit<32> flow;
-            bit<32> flow_opp;
-            bit<48> last_pkt_cnt;
-            bit<48> last_pkt_cnt_opp;
-         bit<48> last_time;
-         bit<48> diff_time;
+            bit<48> flow_hit;
+            bit<32> flow0;
+            bit<32> flow_opp0;
+            bit<48> last_pkt_cnt0;
+            bit<48> last_pkt_cnt_opp0;
+
+            bit<32> flow1;
+            bit<32> flow_opp1;
+            bit<48> last_pkt_cnt1;
+            bit<48> last_pkt_cnt_opp1;
+
+            bit<48> last_time;
+            bit<48> diff_time;
             bit<48> diff_pkt_cnt;
+            bit<16> count;
 
-            // compute flow index
-            hash(flow, HashAlgorithm.crc16, 10w0, {hdr.ipv4.srcAddr, 7w11, hdr.ipv4.dstAddr}, 10w1023);
-            hash(flow_opp, HashAlgorithm.crc16, 10w0, {hdr.ipv4.dstAddr, 7w11, hdr.ipv4.srcAddr}, 10w1023);
+            //read_count
+            count_sample.read(count, 0);
+            count_sample.write(0, count + 1);
 
-            pkt_count.read(last_pkt_cnt, flow);
-            pkt_count.read(last_pkt_cnt_opp, flow_opp);
-            pkt_count.write(flow, last_pkt_cnt + 1);
-            if (last_pkt_cnt > last_pkt_cnt_opp) {
-                diff_pkt_cnt = last_pkt_cnt - last_pkt_cnt_opp + 1;
+            // compute flow index 0
+            hash(flow0, HashAlgorithm.crc32, 10w0, {hdr.ipv4.srcAddr, 7w11, hdr.ipv4.dstAddr}, 10w1023);
+            hash(flow_opp0, HashAlgorithm.crc32, 10w0, {hdr.ipv4.dstAddr, 7w11, hdr.ipv4.srcAddr}, 10w1023);
+
+            // compute flow index 1
+            hash(flow1, HashAlgorithm.crc16, 10w0, {hdr.ipv4.srcAddr, 7w11, hdr.ipv4.dstAddr}, 10w1023);
+            hash(flow_opp1, HashAlgorithm.crc16, 10w0, {hdr.ipv4.dstAddr, 7w11, hdr.ipv4.srcAddr}, 10w1023);
+
+            //read packet count index 0
+            pkt_count_0.read(last_pkt_cnt0, flow0);
+            pkt_count_0.read(last_pkt_cnt_opp0, flow_opp0);
+
+            //read packet count index 1
+            pkt_count_1.read(last_pkt_cnt1, flow1);
+            pkt_count_1.read(last_pkt_cnt_opp1, flow_opp1);
+
+            //updating the packet count index 0
+            last_pkt_cnt0 = last_pkt_cnt0 + 1;
+            pkt_count_0.write(flow0, last_pkt_cnt0);
+
+            //updating the packet count index 1
+            last_pkt_cnt1 = last_pkt_cnt1 + 1;
+            pkt_count_1.write(flow1, last_pkt_cnt1);
+
+            //finding the minimum of FLOW and FLOW OPP - using last_pkt_cnt0 and last_pkt_cnt_opp0 to keep the minimum
+            find_min(last_pkt_cnt0,last_pkt_cnt1,last_pkt_cnt_opp0,last_pkt_cnt_opp1);
+            last_pkt_cnt0 = meta.min_flow;
+            last_pkt_cnt_opp0 = meta.min_flow_opp;
+
+            meta.swap = (bit<16>) 0;
+
+            //calculating the difference
+            if (last_pkt_cnt0 > last_pkt_cnt_opp0) {
+                diff_pkt_cnt = last_pkt_cnt0 - last_pkt_cnt_opp0 + 1;
             } else {
-                diff_pkt_cnt = last_pkt_cnt_opp - last_pkt_cnt + 1;
+                diff_pkt_cnt = last_pkt_cnt_opp0 - last_pkt_cnt0 + 1;
             }
 
-            if (diff_pkt_cnt > (bit<48>)50000) {
-                send_digest((bit<48>)50000);
+            //sending the digest if flow is hit
+            if (diff_pkt_cnt > (bit<48>)1000) {
+                flow_count_treshold.read(flow_hit, flow0);
+                if(flow_hit == (bit<48>)0) {
+                    flow_count_treshold.write(flow0, (bit<48>)1);
+                    meta.hitorsuspect = (bit<16>) 2;
+                }
             }
 
-            // read flow values
-            last_seen.read(last_time,flow);
+            // read the previous timestamp when the flow was hit
+            last_seen.read(last_time,flow0);
             // check window
             diff_time = standard_metadata.ingress_global_timestamp - last_time;
-            if (diff_time > (bit<48>)1500000) {
-                pkt_count.write(flow,(bit<48>)0);
-                pkt_count.write(flow_opp,(bit<48>)0);
-                last_seen.write(flow,standard_metadata.ingress_global_timestamp);
+
+            //checking if the window is expired
+            if (diff_time > 30000000) {
+
+                //resetting the flow counters
+                pkt_count_0.write(flow0,(bit<48>)0);
+                pkt_count_0.write(flow_opp0,(bit<48>)0);
+                pkt_count_1.write(flow1,(bit<48>)0);
+                pkt_count_1.write(flow_opp1,(bit<48>)0);
+
+                //only updating the first flow
+                last_seen.write(flow0,standard_metadata.ingress_global_timestamp);
+
+                meta.swap = 1;
             }
-        }
-    }
-}
+
+            if(ipv4_tag_and_drop.apply().hit){
+                meta.hitorsuspect = 1;
+            }
+
+            //ipv4_drop.apply();
+            if(count == 10){
+                send_digest();
+                count_sample.write(0, 0);
+            }
+            if(meta.swap == 1 || meta.hitorsuspect == 2){
+                send_digest();
+            }
+
+        }// valid ipv4_address
+    }// apply
+}// MyIngress
 
 /*************************************************************************
 ****************  E G R E S S   P R O C E S S I N G   *******************
@@ -1069,8 +1316,33 @@ control MyIngress(inout headers hdr,
 control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
-    apply { }
-}
+    action drop() {
+        mark_to_drop(standard_metadata);
+        exit;
+    }
+
+    table ipv4_drop {
+        key = {
+            hdr.ipv4.srcAddr: exact;
+            hdr.ipv4.dstAddr: exact;
+        }
+        actions = {
+            NoAction;
+            drop;
+        }
+        size = 1024;
+        support_timeout = true;
+        default_action = NoAction();
+    }
+
+    apply {
+
+        if (hdr.ipv4.isValid()) {
+            ipv4_drop.apply();
+        }// valid ipv4_address
+
+    }
+}//MyEgress
 
 /*************************************************************************
 *************   C H E C K S U M    C O M P U T A T I O N   **************
@@ -1078,10 +1350,10 @@ control MyEgress(inout headers hdr,
 
 control MyComputeChecksum(inout headers hdr, inout metadata meta) {
      apply {
- update_checksum(
-     hdr.ipv4.isValid(),
+    update_checksum(
+        hdr.ipv4.isValid(),
             { hdr.ipv4.version,
-          hdr.ipv4.ihl,
+              hdr.ipv4.ihl,
               hdr.ipv4.diffserv,
               hdr.ipv4.totalLen,
               hdr.ipv4.identification,
@@ -1100,10 +1372,16 @@ control MyComputeChecksum(inout headers hdr, inout metadata meta) {
 ***********************  D E P A R S E R  *******************************
 *************************************************************************/
 
+
+
 control MyDeparser(packet_out packet, in headers hdr) {
     apply {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv4);
+        packet.emit(hdr.icmp);
+        packet.emit(hdr.udp);
+        packet.emit(hdr.tcp);
+
     }
 }
 

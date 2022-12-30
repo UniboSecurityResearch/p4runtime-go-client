@@ -1,5 +1,5 @@
 s1:
-  program: asymmetric_countmin
+  program: p4_packet_management_countmin
   digest:
     - digest_t
   rules:

@@ -63,10 +63,6 @@
         ["last_time_0", 48, false],
         ["diff_pkt_cnt_0", 48, false],
         ["count_0", 16, false],
-        ["tmp_46", 48, false],
-        ["tmp_47", 48, false],
-        ["latency_0", 48, false],
-        ["counterLatency_0", 48, false],
         ["userMetadata.ingress_timestamp", 48, false],
         ["userMetadata.packet_length", 16, false],
         ["userMetadata.ip_flags", 16, false],
@@ -887,8 +883,8 @@
       "name" : "deparser",
       "id" : 0,
       "source_info" : {
-        "filename" : "../p4/asymmetric_countmin.p4",
-        "line" : 261,
+        "filename" : "../p4/p4_packet_management_countmin.p4",
+        "line" : 304,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
@@ -903,8 +899,8 @@
       "name" : "MyIngress.pkt_count_0",
       "id" : 0,
       "source_info" : {
-        "filename" : "../p4/asymmetric_countmin.p4",
-        "line" : 40,
+        "filename" : "../p4/p4_packet_management_countmin.p4",
+        "line" : 32,
         "column" : 28,
         "source_fragment" : "pkt_count_0"
       },
@@ -915,8 +911,8 @@
       "name" : "MyIngress.pkt_count_1",
       "id" : 1,
       "source_info" : {
-        "filename" : "../p4/asymmetric_countmin.p4",
-        "line" : 41,
+        "filename" : "../p4/p4_packet_management_countmin.p4",
+        "line" : 33,
         "column" : 28,
         "source_fragment" : "pkt_count_1"
       },
@@ -927,8 +923,8 @@
       "name" : "MyIngress.flow_count_treshold",
       "id" : 2,
       "source_info" : {
-        "filename" : "../p4/asymmetric_countmin.p4",
-        "line" : 42,
+        "filename" : "../p4/p4_packet_management_countmin.p4",
+        "line" : 34,
         "column" : 28,
         "source_fragment" : "flow_count_treshold"
       },
@@ -939,8 +935,8 @@
       "name" : "MyIngress.last_seen",
       "id" : 3,
       "source_info" : {
-        "filename" : "../p4/asymmetric_countmin.p4",
-        "line" : 43,
+        "filename" : "../p4/p4_packet_management_countmin.p4",
+        "line" : 35,
         "column" : 28,
         "source_fragment" : "last_seen"
       },
@@ -951,25 +947,13 @@
       "name" : "MyIngress.count_sample",
       "id" : 4,
       "source_info" : {
-        "filename" : "../p4/asymmetric_countmin.p4",
-        "line" : 44,
+        "filename" : "../p4/p4_packet_management_countmin.p4",
+        "line" : 36,
         "column" : 28,
         "source_fragment" : "count_sample"
       },
       "size" : 1024,
       "bitwidth" : 16
-    },
-    {
-      "name" : "latencyReg",
-      "id" : 5,
-      "source_info" : {
-        "filename" : "../p4/asymmetric_countmin.p4",
-        "line" : 217,
-        "column" : 21,
-        "source_fragment" : "latencyReg"
-      },
-      "size" : 2,
-      "bitwidth" : 48
     }
   ],
   "calculations" : [
@@ -1053,8 +1037,8 @@
       "name" : "calc_3",
       "id" : 4,
       "source_info" : {
-        "filename" : "../p4/asymmetric_countmin.p4",
-        "line" : 239,
+        "filename" : "../p4/p4_packet_management_countmin.p4",
+        "line" : 280,
         "column" : 4,
         "source_fragment" : "update_checksum( ..."
       },
@@ -1265,119 +1249,10 @@
       "primitives" : []
     },
     {
-      "name" : "MyIngress.ipv4_forward",
+      "name" : "NoAction",
       "id" : 1,
-      "runtime_data" : [
-        {
-          "name" : "dstAddr",
-          "bitwidth" : 48
-        },
-        {
-          "name" : "port",
-          "bitwidth" : 9
-        }
-      ],
-      "primitives" : [
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["standard_metadata", "egress_spec"]
-            },
-            {
-              "type" : "runtime_data",
-              "value" : 1
-            }
-          ],
-          "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 52,
-            "column" : 8,
-            "source_fragment" : "standard_metadata.egress_spec = port"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["ethernet", "srcAddr"]
-            },
-            {
-              "type" : "field",
-              "value" : ["ethernet", "dstAddr"]
-            }
-          ],
-          "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 53,
-            "column" : 8,
-            "source_fragment" : "hdr.ethernet.srcAddr = hdr.ethernet.dstAddr"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["ethernet", "dstAddr"]
-            },
-            {
-              "type" : "runtime_data",
-              "value" : 0
-            }
-          ],
-          "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 54,
-            "column" : 8,
-            "source_fragment" : "hdr.ethernet.dstAddr = dstAddr"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["ipv4", "ttl"]
-            },
-            {
-              "type" : "expression",
-              "value" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "&",
-                  "left" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "+",
-                      "left" : {
-                        "type" : "field",
-                        "value" : ["ipv4", "ttl"]
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0xff"
-                      }
-                    }
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0xff"
-                  }
-                }
-              }
-            }
-          ],
-          "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 55,
-            "column" : 8,
-            "source_fragment" : "hdr.ipv4.ttl = hdr.ipv4.ttl - 1"
-          }
-        }
-      ]
+      "runtime_data" : [],
+      "primitives" : []
     },
     {
       "name" : "MyIngress.send_digest",
@@ -1393,14 +1268,14 @@
             },
             {
               "type" : "hexstr",
-              "value" : "0x0000"
+              "value" : "0x0001"
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 60,
-            "column" : 16,
-            "source_fragment" : "0"
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 45,
+            "column" : 12,
+            "source_fragment" : "1"
           }
         },
         {
@@ -1416,9 +1291,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 61,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 46,
+            "column" : 12,
             "source_fragment" : "meta.ingress_timestamp"
           }
         },
@@ -1435,9 +1310,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 62,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 47,
+            "column" : 12,
             "source_fragment" : "meta.packet_length"
           }
         },
@@ -1454,9 +1329,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 63,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 48,
+            "column" : 12,
             "source_fragment" : "meta.ip_flags"
           }
         },
@@ -1473,9 +1348,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 64,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 49,
+            "column" : 12,
             "source_fragment" : "meta.tcp_len"
           }
         },
@@ -1492,9 +1367,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 65,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 50,
+            "column" : 12,
             "source_fragment" : "meta.tcp_ack"
           }
         },
@@ -1511,9 +1386,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 66,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 51,
+            "column" : 12,
             "source_fragment" : "meta.tcp_flags"
           }
         },
@@ -1530,9 +1405,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 67,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 52,
+            "column" : 12,
             "source_fragment" : "meta.tcp_window_size"
           }
         },
@@ -1549,9 +1424,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 68,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 53,
+            "column" : 12,
             "source_fragment" : "meta.udp_len"
           }
         },
@@ -1568,9 +1443,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 69,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 54,
+            "column" : 12,
             "source_fragment" : "meta.icmp_type"
           }
         },
@@ -1587,9 +1462,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 70,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 55,
+            "column" : 12,
             "source_fragment" : "meta.srcPort"
           }
         },
@@ -1606,9 +1481,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 71,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 56,
+            "column" : 12,
             "source_fragment" : "meta.dstPort"
           }
         },
@@ -1625,9 +1500,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 72,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 57,
+            "column" : 12,
             "source_fragment" : "meta.src_ip"
           }
         },
@@ -1644,9 +1519,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 73,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 58,
+            "column" : 12,
             "source_fragment" : "meta.dst_ip"
           }
         },
@@ -1663,9 +1538,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 74,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 59,
+            "column" : 12,
             "source_fragment" : "meta.ip_upper_protocol"
           }
         },
@@ -1682,9 +1557,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 75,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 60,
+            "column" : 12,
             "source_fragment" : "meta.swap"
           }
         },
@@ -1701,9 +1576,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 76,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 61,
+            "column" : 12,
             "source_fragment" : "meta.hitorsuspect"
           }
         },
@@ -1720,8 +1595,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 59,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 44,
             "column" : 8,
             "source_fragment" : "digest<digest_t>(0, { ..."
           }
@@ -1742,14 +1617,14 @@
             },
             {
               "type" : "hexstr",
-              "value" : "0x0000"
+              "value" : "0x0001"
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 60,
-            "column" : 16,
-            "source_fragment" : "0"
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 45,
+            "column" : 12,
+            "source_fragment" : "1"
           }
         },
         {
@@ -1765,9 +1640,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 61,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 46,
+            "column" : 12,
             "source_fragment" : "meta.ingress_timestamp"
           }
         },
@@ -1784,9 +1659,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 62,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 47,
+            "column" : 12,
             "source_fragment" : "meta.packet_length"
           }
         },
@@ -1803,9 +1678,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 63,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 48,
+            "column" : 12,
             "source_fragment" : "meta.ip_flags"
           }
         },
@@ -1822,9 +1697,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 64,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 49,
+            "column" : 12,
             "source_fragment" : "meta.tcp_len"
           }
         },
@@ -1841,9 +1716,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 65,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 50,
+            "column" : 12,
             "source_fragment" : "meta.tcp_ack"
           }
         },
@@ -1860,9 +1735,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 66,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 51,
+            "column" : 12,
             "source_fragment" : "meta.tcp_flags"
           }
         },
@@ -1879,9 +1754,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 67,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 52,
+            "column" : 12,
             "source_fragment" : "meta.tcp_window_size"
           }
         },
@@ -1898,9 +1773,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 68,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 53,
+            "column" : 12,
             "source_fragment" : "meta.udp_len"
           }
         },
@@ -1917,9 +1792,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 69,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 54,
+            "column" : 12,
             "source_fragment" : "meta.icmp_type"
           }
         },
@@ -1936,9 +1811,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 70,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 55,
+            "column" : 12,
             "source_fragment" : "meta.srcPort"
           }
         },
@@ -1955,9 +1830,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 71,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 56,
+            "column" : 12,
             "source_fragment" : "meta.dstPort"
           }
         },
@@ -1974,9 +1849,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 72,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 57,
+            "column" : 12,
             "source_fragment" : "meta.src_ip"
           }
         },
@@ -1993,9 +1868,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 73,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 58,
+            "column" : 12,
             "source_fragment" : "meta.dst_ip"
           }
         },
@@ -2012,9 +1887,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 74,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 59,
+            "column" : 12,
             "source_fragment" : "meta.ip_upper_protocol"
           }
         },
@@ -2031,9 +1906,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 75,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 60,
+            "column" : 12,
             "source_fragment" : "meta.swap"
           }
         },
@@ -2050,9 +1925,9 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 76,
-            "column" : 16,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 61,
+            "column" : 12,
             "source_fragment" : "meta.hitorsuspect"
           }
         },
@@ -2069,8 +1944,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 59,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 44,
             "column" : 8,
             "source_fragment" : "digest<digest_t>(0, { ..."
           }
@@ -2165,8 +2040,123 @@
       ]
     },
     {
-      "name" : "asymmetric_countmin132",
+      "name" : "MyIngress.ipv4_forward",
       "id" : 5,
+      "runtime_data" : [
+        {
+          "name" : "dstAddr",
+          "bitwidth" : 48
+        },
+        {
+          "name" : "port",
+          "bitwidth" : 9
+        }
+      ],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["standard_metadata", "egress_spec"]
+            },
+            {
+              "type" : "runtime_data",
+              "value" : 1
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 82,
+            "column" : 8,
+            "source_fragment" : "standard_metadata.egress_spec = port"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ethernet", "srcAddr"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ethernet", "dstAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 83,
+            "column" : 8,
+            "source_fragment" : "hdr.ethernet.srcAddr = hdr.ethernet.dstAddr"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ethernet", "dstAddr"]
+            },
+            {
+              "type" : "runtime_data",
+              "value" : 0
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 84,
+            "column" : 8,
+            "source_fragment" : "hdr.ethernet.dstAddr = dstAddr"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "ttl"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "+",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["ipv4", "ttl"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0xff"
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 85,
+            "column" : 8,
+            "source_fragment" : "hdr.ipv4.ttl = hdr.ipv4.ttl - 1"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "p4_packet_management_countmin152",
+      "id" : 6,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -2186,8 +2176,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 132,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 152,
             "column" : 12,
             "source_fragment" : "count_sample.read(count, 0)"
           }
@@ -2228,8 +2218,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 133,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 153,
             "column" : 34,
             "source_fragment" : "count + 1"
           }
@@ -2251,8 +2241,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 133,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 153,
             "column" : 12,
             "source_fragment" : "count_sample.write(0, count + 1)"
           }
@@ -2270,8 +2260,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 136,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 156,
             "column" : 52,
             "source_fragment" : "hdr.ipv4.srcAddr"
           }
@@ -2289,8 +2279,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 136,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 156,
             "column" : 70,
             "source_fragment" : "7w11"
           }
@@ -2308,8 +2298,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 136,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 156,
             "column" : 76,
             "source_fragment" : "hdr.ipv4.dstAddr"
           }
@@ -2335,8 +2325,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 136,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 156,
             "column" : 12,
             "source_fragment" : "hash(flow0, HashAlgorithm.crc32, 10w0, {hdr.ipv4.srcAddr, 7w11, hdr.ipv4.dstAddr}, 10w1023)"
           }
@@ -2354,8 +2344,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 137,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 157,
             "column" : 56,
             "source_fragment" : "hdr.ipv4.dstAddr"
           }
@@ -2373,8 +2363,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 137,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 157,
             "column" : 74,
             "source_fragment" : "7w11"
           }
@@ -2392,8 +2382,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 137,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 157,
             "column" : 80,
             "source_fragment" : "hdr.ipv4.srcAddr"
           }
@@ -2419,8 +2409,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 137,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 157,
             "column" : 12,
             "source_fragment" : "hash(flow_opp0, HashAlgorithm.crc32, 10w0, {hdr.ipv4.dstAddr, 7w11, hdr.ipv4.srcAddr}, 10w1023)"
           }
@@ -2438,8 +2428,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 140,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 160,
             "column" : 52,
             "source_fragment" : "hdr.ipv4.srcAddr"
           }
@@ -2457,8 +2447,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 140,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 160,
             "column" : 70,
             "source_fragment" : "7w11"
           }
@@ -2476,8 +2466,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 140,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 160,
             "column" : 76,
             "source_fragment" : "hdr.ipv4.dstAddr"
           }
@@ -2503,8 +2493,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 140,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 160,
             "column" : 12,
             "source_fragment" : "hash(flow1, HashAlgorithm.crc16, 10w0, {hdr.ipv4.srcAddr, 7w11, hdr.ipv4.dstAddr}, 10w1023)"
           }
@@ -2522,8 +2512,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 141,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 161,
             "column" : 56,
             "source_fragment" : "hdr.ipv4.dstAddr"
           }
@@ -2541,8 +2531,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 141,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 161,
             "column" : 74,
             "source_fragment" : "7w11"
           }
@@ -2560,8 +2550,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 141,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 161,
             "column" : 80,
             "source_fragment" : "hdr.ipv4.srcAddr"
           }
@@ -2587,8 +2577,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 141,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 161,
             "column" : 12,
             "source_fragment" : "hash(flow_opp1, HashAlgorithm.crc16, 10w0, {hdr.ipv4.dstAddr, 7w11, hdr.ipv4.srcAddr}, 10w1023)"
           }
@@ -2610,8 +2600,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 144,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 164,
             "column" : 12,
             "source_fragment" : "pkt_count_0.read(last_pkt_cnt0, flow0)"
           }
@@ -2633,8 +2623,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 145,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 165,
             "column" : 12,
             "source_fragment" : "pkt_count_0.read(last_pkt_cnt_opp0, flow_opp0)"
           }
@@ -2656,8 +2646,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 148,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 168,
             "column" : 12,
             "source_fragment" : "pkt_count_1.read(last_pkt_cnt1, flow1)"
           }
@@ -2679,8 +2669,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 149,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 169,
             "column" : 12,
             "source_fragment" : "pkt_count_1.read(last_pkt_cnt_opp1, flow_opp1)"
           }
@@ -2721,8 +2711,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 152,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 172,
             "column" : 12,
             "source_fragment" : "last_pkt_cnt0 = last_pkt_cnt0 + 1"
           }
@@ -2744,8 +2734,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 153,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 173,
             "column" : 12,
             "source_fragment" : "pkt_count_0.write(flow0, last_pkt_cnt0)"
           }
@@ -2786,8 +2776,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 156,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 176,
             "column" : 12,
             "source_fragment" : "last_pkt_cnt1 = last_pkt_cnt1 + 1"
           }
@@ -2809,8 +2799,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 157,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 177,
             "column" : 12,
             "source_fragment" : "pkt_count_1.write(flow1, last_pkt_cnt1)"
           }
@@ -2818,76 +2808,7 @@
       ]
     },
     {
-      "name" : "asymmetric_countmin166",
-      "id" : 6,
-      "runtime_data" : [],
-      "primitives" : [
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["scalars", "diff_pkt_cnt_0"]
-            },
-            {
-              "type" : "expression",
-              "value" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "&",
-                  "left" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "+",
-                      "left" : {
-                        "type" : "expression",
-                        "value" : {
-                          "op" : "&",
-                          "left" : {
-                            "type" : "expression",
-                            "value" : {
-                              "op" : "-",
-                              "left" : {
-                                "type" : "field",
-                                "value" : ["scalars", "userMetadata.min_flow"]
-                              },
-                              "right" : {
-                                "type" : "field",
-                                "value" : ["scalars", "userMetadata.min_flow_opp"]
-                              }
-                            }
-                          },
-                          "right" : {
-                            "type" : "hexstr",
-                            "value" : "0xffffffffffff"
-                          }
-                        }
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0x000000000001"
-                      }
-                    }
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0xffffffffffff"
-                  }
-                }
-              }
-            }
-          ],
-          "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 166,
-            "column" : 16,
-            "source_fragment" : "diff_pkt_cnt = last_pkt_cnt0 - last_pkt_cnt_opp0 + 1"
-          }
-        }
-      ]
-    },
-    {
-      "name" : "asymmetric_countmin168",
+      "name" : "p4_packet_management_countmin188",
       "id" : 7,
       "runtime_data" : [],
       "primitives" : [
@@ -2918,6 +2839,75 @@
                               "op" : "-",
                               "left" : {
                                 "type" : "field",
+                                "value" : ["scalars", "userMetadata.min_flow"]
+                              },
+                              "right" : {
+                                "type" : "field",
+                                "value" : ["scalars", "userMetadata.min_flow_opp"]
+                              }
+                            }
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0xffffffffffff"
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x000000000001"
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 188,
+            "column" : 16,
+            "source_fragment" : "diff_pkt_cnt = last_pkt_cnt0 - last_pkt_cnt_opp0 + 1"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "p4_packet_management_countmin190",
+      "id" : 8,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "diff_pkt_cnt_0"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "+",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "&",
+                          "left" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "-",
+                              "left" : {
+                                "type" : "field",
                                 "value" : ["scalars", "userMetadata.min_flow_opp"]
                               },
                               "right" : {
@@ -2947,8 +2937,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 168,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 190,
             "column" : 16,
             "source_fragment" : "diff_pkt_cnt = last_pkt_cnt_opp0 - last_pkt_cnt0 + 1"
           }
@@ -2956,8 +2946,8 @@
       ]
     },
     {
-      "name" : "asymmetric_countmin161",
-      "id" : 8,
+      "name" : "p4_packet_management_countmin181",
+      "id" : 9,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -2973,8 +2963,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 161,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 181,
             "column" : 12,
             "source_fragment" : "last_pkt_cnt0 = meta.min_flow"
           }
@@ -2992,17 +2982,36 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 162,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 182,
             "column" : 12,
             "source_fragment" : "last_pkt_cnt_opp0 = meta.min_flow_opp"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.swap"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0000"
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 184,
+            "column" : 12,
+            "source_fragment" : "meta.swap = (bit<16>) 0"
           }
         }
       ]
     },
     {
-      "name" : "asymmetric_countmin175",
-      "id" : 9,
+      "name" : "p4_packet_management_countmin197",
+      "id" : 10,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -3022,8 +3031,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 175,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 197,
             "column" : 20,
             "source_fragment" : "flow_count_treshold.write(flow0, (bit<48>)1)"
           }
@@ -3041,17 +3050,17 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 176,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 198,
             "column" : 20,
-            "source_fragment" : "meta.hitorsuspect = 2"
+            "source_fragment" : "meta.hitorsuspect = (bit<16>) 2"
           }
         }
       ]
     },
     {
-      "name" : "asymmetric_countmin173",
-      "id" : 10,
+      "name" : "p4_packet_management_countmin195",
+      "id" : 11,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -3071,8 +3080,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 173,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 195,
             "column" : 16,
             "source_fragment" : "flow_count_treshold.read(flow_hit, flow0)"
           }
@@ -3080,8 +3089,8 @@
       ]
     },
     {
-      "name" : "asymmetric_countmin190",
-      "id" : 11,
+      "name" : "p4_packet_management_countmin211",
+      "id" : 12,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -3101,8 +3110,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 190,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 211,
             "column" : 16,
             "source_fragment" : "pkt_count_0.write(flow0,(bit<48>)0)"
           }
@@ -3124,8 +3133,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 191,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 212,
             "column" : 16,
             "source_fragment" : "pkt_count_0.write(flow_opp0,(bit<48>)0)"
           }
@@ -3147,8 +3156,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 192,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 213,
             "column" : 16,
             "source_fragment" : "pkt_count_1.write(flow1,(bit<48>)0)"
           }
@@ -3170,8 +3179,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 193,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 214,
             "column" : 16,
             "source_fragment" : "pkt_count_1.write(flow_opp1,(bit<48>)0)"
           }
@@ -3193,8 +3202,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 196,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 217,
             "column" : 16,
             "source_fragment" : "last_seen.write(flow0,standard_metadata.ingress_global_timestamp)"
           }
@@ -3212,8 +3221,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 199,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 219,
             "column" : 16,
             "source_fragment" : "meta.swap = 1"
           }
@@ -3221,8 +3230,8 @@
       ]
     },
     {
-      "name" : "asymmetric_countmin182",
-      "id" : 12,
+      "name" : "p4_packet_management_countmin203",
+      "id" : 13,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -3242,8 +3251,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 182,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 203,
             "column" : 12,
             "source_fragment" : "last_seen.read(last_time,flow0)"
           }
@@ -3251,8 +3260,34 @@
       ]
     },
     {
-      "name" : "asymmetric_countmin205",
-      "id" : 13,
+      "name" : "p4_packet_management_countmin223",
+      "id" : 14,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "userMetadata.hitorsuspect"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x0001"
+            }
+          ],
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 223,
+            "column" : 16,
+            "source_fragment" : "meta.hitorsuspect = 1"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "p4_packet_management_countmin229",
+      "id" : 15,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -3272,8 +3307,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 205,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 229,
             "column" : 16,
             "source_fragment" : "count_sample.write(0, 0)"
           }
@@ -3281,204 +3316,39 @@
       ]
     },
     {
-      "name" : "asymmetric_countmin225",
-      "id" : 14,
+      "name" : "NoAction",
+      "id" : 16,
+      "runtime_data" : [],
+      "primitives" : []
+    },
+    {
+      "name" : "MyEgress.drop",
+      "id" : 17,
       "runtime_data" : [],
       "primitives" : [
         {
-          "op" : "register_read",
+          "op" : "mark_to_drop",
           "parameters" : [
             {
-              "type" : "field",
-              "value" : ["scalars", "latency_0"]
-            },
-            {
-              "type" : "register_array",
-              "value" : "latencyReg"
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x00000000"
+              "type" : "header",
+              "value" : "standard_metadata"
             }
           ],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 225,
-            "column" : 12,
-            "source_fragment" : "latencyReg.read(latency, 0)"
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 247,
+            "column" : 8,
+            "source_fragment" : "mark_to_drop(standard_metadata)"
           }
         },
         {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["scalars", "tmp_46"]
-            },
-            {
-              "type" : "expression",
-              "value" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "&",
-                  "left" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "-",
-                      "left" : {
-                        "type" : "expression",
-                        "value" : {
-                          "op" : "&",
-                          "left" : {
-                            "type" : "expression",
-                            "value" : {
-                              "op" : "+",
-                              "left" : {
-                                "type" : "field",
-                                "value" : ["scalars", "latency_0"]
-                              },
-                              "right" : {
-                                "type" : "field",
-                                "value" : ["standard_metadata", "egress_global_timestamp"]
-                              }
-                            }
-                          },
-                          "right" : {
-                            "type" : "hexstr",
-                            "value" : "0xffffffffffff"
-                          }
-                        }
-                      },
-                      "right" : {
-                        "type" : "field",
-                        "value" : ["standard_metadata", "ingress_global_timestamp"]
-                      }
-                    }
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0xffffffffffff"
-                  }
-                }
-              }
-            }
-          ],
+          "op" : "exit",
+          "parameters" : [],
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 226,
-            "column" : 32,
-            "source_fragment" : "latency + standard_metadata.egress_global_timestamp - standard_metadata.ingress_global_timestamp"
-          }
-        },
-        {
-          "op" : "register_write",
-          "parameters" : [
-            {
-              "type" : "register_array",
-              "value" : "latencyReg"
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x00000000"
-            },
-            {
-              "type" : "field",
-              "value" : ["scalars", "tmp_46"]
-            }
-          ],
-          "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 226,
-            "column" : 12,
-            "source_fragment" : "latencyReg.write(0, latency + standard_metadata.egress_global_timestamp - standard_metadata.ingress_global_timestamp)"
-          }
-        },
-        {
-          "op" : "register_read",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["scalars", "counterLatency_0"]
-            },
-            {
-              "type" : "register_array",
-              "value" : "latencyReg"
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x00000001"
-            }
-          ],
-          "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 227,
-            "column" : 12,
-            "source_fragment" : "latencyReg.read(counterLatency, 1)"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["scalars", "tmp_47"]
-            },
-            {
-              "type" : "expression",
-              "value" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "&",
-                  "left" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "+",
-                      "left" : {
-                        "type" : "field",
-                        "value" : ["scalars", "counterLatency_0"]
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0x000000000001"
-                      }
-                    }
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0xffffffffffff"
-                  }
-                }
-              }
-            }
-          ],
-          "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 228,
-            "column" : 32,
-            "source_fragment" : "counterLatency + (bit<48>)1"
-          }
-        },
-        {
-          "op" : "register_write",
-          "parameters" : [
-            {
-              "type" : "register_array",
-              "value" : "latencyReg"
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x00000001"
-            },
-            {
-              "type" : "field",
-              "value" : ["scalars", "tmp_47"]
-            }
-          ],
-          "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 228,
-            "column" : 12,
-            "source_fragment" : "latencyReg.write(1, counterLatency + (bit<48>)1)"
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 248,
+            "column" : 8,
+            "source_fragment" : "exit"
           }
         }
       ]
@@ -3489,8 +3359,8 @@
       "name" : "ingress",
       "id" : 0,
       "source_info" : {
-        "filename" : "../p4/asymmetric_countmin.p4",
-        "line" : 36,
+        "filename" : "../p4/p4_packet_management_countmin.p4",
+        "line" : 29,
         "column" : 8,
         "source_fragment" : "MyIngress"
       },
@@ -3500,8 +3370,8 @@
           "name" : "MyIngress.ipv4_lpm",
           "id" : 0,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 97,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 88,
             "column" : 10,
             "source_fragment" : "ipv4_lpm"
           },
@@ -3519,12 +3389,12 @@
           "with_counters" : false,
           "support_timeout" : true,
           "direct_meters" : null,
-          "action_ids" : [1, 0],
+          "action_ids" : [5, 0],
           "actions" : ["MyIngress.ipv4_forward", "NoAction"],
-          "base_default_next" : "tbl_asymmetric_countmin132",
+          "base_default_next" : "tbl_p4_packet_management_countmin152",
           "next_tables" : {
-            "MyIngress.ipv4_forward" : "tbl_asymmetric_countmin132",
-            "NoAction" : "tbl_asymmetric_countmin132"
+            "MyIngress.ipv4_forward" : "tbl_p4_packet_management_countmin152",
+            "NoAction" : "tbl_p4_packet_management_countmin152"
           },
           "default_entry" : {
             "action_id" : 0,
@@ -3534,11 +3404,11 @@
           }
         },
         {
-          "name" : "tbl_asymmetric_countmin132",
+          "name" : "tbl_p4_packet_management_countmin152",
           "id" : 1,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 132,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 152,
             "column" : 12,
             "source_fragment" : "count_sample.read(count, 0); ..."
           },
@@ -3549,14 +3419,14 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [5],
-          "actions" : ["asymmetric_countmin132"],
+          "action_ids" : [6],
+          "actions" : ["p4_packet_management_countmin152"],
           "base_default_next" : "tbl_find_min",
           "next_tables" : {
-            "asymmetric_countmin132" : "tbl_find_min"
+            "p4_packet_management_countmin152" : "tbl_find_min"
           },
           "default_entry" : {
-            "action_id" : 5,
+            "action_id" : 6,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
@@ -3566,8 +3436,8 @@
           "name" : "tbl_find_min",
           "id" : 2,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 160,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 180,
             "column" : 12,
             "source_fragment" : "find_min(last_pkt_cnt0,last_pkt_cnt1,last_pkt_cnt_opp0,last_pkt_cnt_opp1)"
           },
@@ -3580,9 +3450,9 @@
           "direct_meters" : null,
           "action_ids" : [4],
           "actions" : ["MyIngress.find_min"],
-          "base_default_next" : "tbl_asymmetric_countmin161",
+          "base_default_next" : "tbl_p4_packet_management_countmin181",
           "next_tables" : {
-            "MyIngress.find_min" : "tbl_asymmetric_countmin161"
+            "MyIngress.find_min" : "tbl_p4_packet_management_countmin181"
           },
           "default_entry" : {
             "action_id" : 4,
@@ -3592,11 +3462,11 @@
           }
         },
         {
-          "name" : "tbl_asymmetric_countmin161",
+          "name" : "tbl_p4_packet_management_countmin181",
           "id" : 3,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 161,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 181,
             "column" : 26,
             "source_fragment" : "= meta.min_flow; ..."
           },
@@ -3607,54 +3477,25 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [8],
-          "actions" : ["asymmetric_countmin161"],
+          "action_ids" : [9],
+          "actions" : ["p4_packet_management_countmin181"],
           "base_default_next" : "node_7",
           "next_tables" : {
-            "asymmetric_countmin161" : "node_7"
+            "p4_packet_management_countmin181" : "node_7"
           },
           "default_entry" : {
-            "action_id" : 8,
+            "action_id" : 9,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
           }
         },
         {
-          "name" : "tbl_asymmetric_countmin166",
+          "name" : "tbl_p4_packet_management_countmin188",
           "id" : 4,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 166,
-            "column" : 29,
-            "source_fragment" : "="
-          },
-          "key" : [],
-          "match_type" : "exact",
-          "type" : "simple",
-          "max_size" : 1024,
-          "with_counters" : false,
-          "support_timeout" : false,
-          "direct_meters" : null,
-          "action_ids" : [6],
-          "actions" : ["asymmetric_countmin166"],
-          "base_default_next" : "node_10",
-          "next_tables" : {
-            "asymmetric_countmin166" : "node_10"
-          },
-          "default_entry" : {
-            "action_id" : 6,
-            "action_const" : true,
-            "action_data" : [],
-            "action_entry_const" : true
-          }
-        },
-        {
-          "name" : "tbl_asymmetric_countmin168",
-          "id" : 5,
-          "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 168,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 188,
             "column" : 29,
             "source_fragment" : "="
           },
@@ -3666,10 +3507,10 @@
           "support_timeout" : false,
           "direct_meters" : null,
           "action_ids" : [7],
-          "actions" : ["asymmetric_countmin168"],
+          "actions" : ["p4_packet_management_countmin188"],
           "base_default_next" : "node_10",
           "next_tables" : {
-            "asymmetric_countmin168" : "node_10"
+            "p4_packet_management_countmin188" : "node_10"
           },
           "default_entry" : {
             "action_id" : 7,
@@ -3679,11 +3520,40 @@
           }
         },
         {
-          "name" : "tbl_asymmetric_countmin173",
+          "name" : "tbl_p4_packet_management_countmin190",
+          "id" : 5,
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 190,
+            "column" : 29,
+            "source_fragment" : "="
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [8],
+          "actions" : ["p4_packet_management_countmin190"],
+          "base_default_next" : "node_10",
+          "next_tables" : {
+            "p4_packet_management_countmin190" : "node_10"
+          },
+          "default_entry" : {
+            "action_id" : 8,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "tbl_p4_packet_management_countmin195",
           "id" : 6,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 173,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 195,
             "column" : 16,
             "source_fragment" : "flow_count_treshold.read(flow_hit, flow0)"
           },
@@ -3694,25 +3564,25 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [10],
-          "actions" : ["asymmetric_countmin173"],
+          "action_ids" : [11],
+          "actions" : ["p4_packet_management_countmin195"],
           "base_default_next" : "node_12",
           "next_tables" : {
-            "asymmetric_countmin173" : "node_12"
+            "p4_packet_management_countmin195" : "node_12"
           },
           "default_entry" : {
-            "action_id" : 10,
+            "action_id" : 11,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
           }
         },
         {
-          "name" : "tbl_asymmetric_countmin175",
+          "name" : "tbl_p4_packet_management_countmin197",
           "id" : 7,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 175,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 197,
             "column" : 20,
             "source_fragment" : "flow_count_treshold.write(flow0, (bit<48>)1); ..."
           },
@@ -3723,25 +3593,25 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [9],
-          "actions" : ["asymmetric_countmin175"],
-          "base_default_next" : "tbl_asymmetric_countmin182",
+          "action_ids" : [10],
+          "actions" : ["p4_packet_management_countmin197"],
+          "base_default_next" : "tbl_p4_packet_management_countmin203",
           "next_tables" : {
-            "asymmetric_countmin175" : "tbl_asymmetric_countmin182"
+            "p4_packet_management_countmin197" : "tbl_p4_packet_management_countmin203"
           },
           "default_entry" : {
-            "action_id" : 9,
+            "action_id" : 10,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
           }
         },
         {
-          "name" : "tbl_asymmetric_countmin182",
+          "name" : "tbl_p4_packet_management_countmin203",
           "id" : 8,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 182,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 203,
             "column" : 12,
             "source_fragment" : "last_seen.read(last_time,flow0)"
           },
@@ -3752,25 +3622,25 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [12],
-          "actions" : ["asymmetric_countmin182"],
+          "action_ids" : [13],
+          "actions" : ["p4_packet_management_countmin203"],
           "base_default_next" : "node_15",
           "next_tables" : {
-            "asymmetric_countmin182" : "node_15"
+            "p4_packet_management_countmin203" : "node_15"
           },
           "default_entry" : {
-            "action_id" : 12,
+            "action_id" : 13,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
           }
         },
         {
-          "name" : "tbl_asymmetric_countmin190",
+          "name" : "tbl_p4_packet_management_countmin211",
           "id" : 9,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 190,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 211,
             "column" : 16,
             "source_fragment" : "pkt_count_0.write(flow0,(bit<48>)0); ..."
           },
@@ -3781,14 +3651,86 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [11],
-          "actions" : ["asymmetric_countmin190"],
-          "base_default_next" : "node_17",
+          "action_ids" : [12],
+          "actions" : ["p4_packet_management_countmin211"],
+          "base_default_next" : "MyIngress.ipv4_tag_and_drop",
           "next_tables" : {
-            "asymmetric_countmin190" : "node_17"
+            "p4_packet_management_countmin211" : "MyIngress.ipv4_tag_and_drop"
           },
           "default_entry" : {
-            "action_id" : 11,
+            "action_id" : 12,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        },
+        {
+          "name" : "MyIngress.ipv4_tag_and_drop",
+          "id" : 10,
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 102,
+            "column" : 10,
+            "source_fragment" : "ipv4_tag_and_drop"
+          },
+          "key" : [
+            {
+              "match_type" : "exact",
+              "name" : "hdr.ipv4.srcAddr",
+              "target" : ["ipv4", "srcAddr"],
+              "mask" : null
+            },
+            {
+              "match_type" : "exact",
+              "name" : "hdr.ipv4.dstAddr",
+              "target" : ["ipv4", "dstAddr"],
+              "mask" : null
+            }
+          ],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : true,
+          "direct_meters" : null,
+          "action_ids" : [1],
+          "actions" : ["NoAction"],
+          "base_default_next" : null,
+          "next_tables" : {
+            "__HIT__" : "tbl_p4_packet_management_countmin223",
+            "__MISS__" : "node_19"
+          },
+          "default_entry" : {
+            "action_id" : 1,
+            "action_const" : false,
+            "action_data" : [],
+            "action_entry_const" : false
+          }
+        },
+        {
+          "name" : "tbl_p4_packet_management_countmin223",
+          "id" : 11,
+          "source_info" : {
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 223,
+            "column" : 34,
+            "source_fragment" : "="
+          },
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [14],
+          "actions" : ["p4_packet_management_countmin223"],
+          "base_default_next" : "node_19",
+          "next_tables" : {
+            "p4_packet_management_countmin223" : "node_19"
+          },
+          "default_entry" : {
+            "action_id" : 14,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
@@ -3796,10 +3738,10 @@
         },
         {
           "name" : "tbl_send_digest",
-          "id" : 10,
+          "id" : 12,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 204,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 228,
             "column" : 16,
             "source_fragment" : "send_digest()"
           },
@@ -3812,9 +3754,9 @@
           "direct_meters" : null,
           "action_ids" : [2],
           "actions" : ["MyIngress.send_digest"],
-          "base_default_next" : "tbl_asymmetric_countmin205",
+          "base_default_next" : "tbl_p4_packet_management_countmin229",
           "next_tables" : {
-            "MyIngress.send_digest" : "tbl_asymmetric_countmin205"
+            "MyIngress.send_digest" : "tbl_p4_packet_management_countmin229"
           },
           "default_entry" : {
             "action_id" : 2,
@@ -3824,11 +3766,11 @@
           }
         },
         {
-          "name" : "tbl_asymmetric_countmin205",
-          "id" : 11,
+          "name" : "tbl_p4_packet_management_countmin229",
+          "id" : 13,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 205,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 229,
             "column" : 16,
             "source_fragment" : "count_sample.write(0, 0)"
           },
@@ -3839,14 +3781,14 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [13],
-          "actions" : ["asymmetric_countmin205"],
-          "base_default_next" : "node_20",
+          "action_ids" : [15],
+          "actions" : ["p4_packet_management_countmin229"],
+          "base_default_next" : "node_22",
           "next_tables" : {
-            "asymmetric_countmin205" : "node_20"
+            "p4_packet_management_countmin229" : "node_22"
           },
           "default_entry" : {
-            "action_id" : 13,
+            "action_id" : 15,
             "action_const" : true,
             "action_data" : [],
             "action_entry_const" : true
@@ -3854,10 +3796,10 @@
         },
         {
           "name" : "tbl_send_digest_0",
-          "id" : 12,
+          "id" : 14,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 208,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 232,
             "column" : 16,
             "source_fragment" : "send_digest()"
           },
@@ -3888,8 +3830,8 @@
           "name" : "node_2",
           "id" : 0,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 112,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 132,
             "column" : 12,
             "source_fragment" : "hdr.ipv4.isValid()"
           },
@@ -3911,8 +3853,8 @@
           "name" : "node_7",
           "id" : 1,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 165,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 187,
             "column" : 16,
             "source_fragment" : "last_pkt_cnt0 > last_pkt_cnt_opp0"
           },
@@ -3930,17 +3872,17 @@
               }
             }
           },
-          "true_next" : "tbl_asymmetric_countmin166",
-          "false_next" : "tbl_asymmetric_countmin168"
+          "true_next" : "tbl_p4_packet_management_countmin188",
+          "false_next" : "tbl_p4_packet_management_countmin190"
         },
         {
           "name" : "node_10",
           "id" : 2,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 172,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 194,
             "column" : 16,
-            "source_fragment" : "diff_pkt_cnt > (bit<48>)250"
+            "source_fragment" : "diff_pkt_cnt > (bit<48>)1000"
           },
           "expression" : {
             "type" : "expression",
@@ -3952,19 +3894,19 @@
               },
               "right" : {
                 "type" : "hexstr",
-                "value" : "0x0000000000fa"
+                "value" : "0x0000000003e8"
               }
             }
           },
-          "true_next" : "tbl_asymmetric_countmin173",
-          "false_next" : "tbl_asymmetric_countmin182"
+          "true_next" : "tbl_p4_packet_management_countmin195",
+          "false_next" : "tbl_p4_packet_management_countmin203"
         },
         {
           "name" : "node_12",
           "id" : 3,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 174,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 196,
             "column" : 19,
             "source_fragment" : "flow_hit == (bit<48>)0"
           },
@@ -3982,17 +3924,17 @@
               }
             }
           },
-          "true_next" : "tbl_asymmetric_countmin175",
-          "false_next" : "tbl_asymmetric_countmin182"
+          "true_next" : "tbl_p4_packet_management_countmin197",
+          "false_next" : "tbl_p4_packet_management_countmin203"
         },
         {
           "name" : "node_15",
           "id" : 4,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 187,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 208,
             "column" : 16,
-            "source_fragment" : "diff_time > (bit<48>)30000000"
+            "source_fragment" : "diff_time > 30000000"
           },
           "expression" : {
             "type" : "expression",
@@ -4028,15 +3970,15 @@
               }
             }
           },
-          "true_next" : "tbl_asymmetric_countmin190",
-          "false_next" : "node_17"
+          "true_next" : "tbl_p4_packet_management_countmin211",
+          "false_next" : "MyIngress.ipv4_tag_and_drop"
         },
         {
-          "name" : "node_17",
+          "name" : "node_19",
           "id" : 5,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 203,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 227,
             "column" : 15,
             "source_fragment" : "count == 10"
           },
@@ -4055,14 +3997,14 @@
             }
           },
           "true_next" : "tbl_send_digest",
-          "false_next" : "node_20"
+          "false_next" : "node_22"
         },
         {
-          "name" : "node_20",
+          "name" : "node_22",
           "id" : 6,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 207,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 231,
             "column" : 15,
             "source_fragment" : "meta.swap == 1 || meta.hitorsuspect == 2"
           },
@@ -4109,52 +4051,66 @@
       "name" : "egress",
       "id" : 1,
       "source_info" : {
-        "filename" : "../p4/asymmetric_countmin.p4",
-        "line" : 218,
+        "filename" : "../p4/p4_packet_management_countmin.p4",
+        "line" : 243,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
-      "init_table" : "node_24",
+      "init_table" : "node_26",
       "tables" : [
         {
-          "name" : "tbl_asymmetric_countmin225",
-          "id" : 13,
+          "name" : "MyEgress.ipv4_drop",
+          "id" : 15,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 225,
-            "column" : 12,
-            "source_fragment" : "latencyReg.read(latency, 0); ..."
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 251,
+            "column" : 10,
+            "source_fragment" : "ipv4_drop"
           },
-          "key" : [],
+          "key" : [
+            {
+              "match_type" : "exact",
+              "name" : "hdr.ipv4.srcAddr",
+              "target" : ["ipv4", "srcAddr"],
+              "mask" : null
+            },
+            {
+              "match_type" : "exact",
+              "name" : "hdr.ipv4.dstAddr",
+              "target" : ["ipv4", "dstAddr"],
+              "mask" : null
+            }
+          ],
           "match_type" : "exact",
           "type" : "simple",
           "max_size" : 1024,
           "with_counters" : false,
-          "support_timeout" : false,
+          "support_timeout" : true,
           "direct_meters" : null,
-          "action_ids" : [14],
-          "actions" : ["asymmetric_countmin225"],
+          "action_ids" : [16, 17],
+          "actions" : ["NoAction", "MyEgress.drop"],
           "base_default_next" : null,
           "next_tables" : {
-            "asymmetric_countmin225" : null
+            "NoAction" : null,
+            "MyEgress.drop" : null
           },
           "default_entry" : {
-            "action_id" : 14,
-            "action_const" : true,
+            "action_id" : 16,
+            "action_const" : false,
             "action_data" : [],
-            "action_entry_const" : true
+            "action_entry_const" : false
           }
         }
       ],
       "action_profiles" : [],
       "conditionals" : [
         {
-          "name" : "node_24",
+          "name" : "node_26",
           "id" : 7,
           "source_info" : {
-            "filename" : "../p4/asymmetric_countmin.p4",
-            "line" : 224,
-            "column" : 11,
+            "filename" : "../p4/p4_packet_management_countmin.p4",
+            "line" : 267,
+            "column" : 12,
             "source_fragment" : "hdr.ipv4.isValid()"
           },
           "expression" : {
@@ -4169,7 +4125,7 @@
             }
           },
           "false_next" : null,
-          "true_next" : "tbl_asymmetric_countmin225"
+          "true_next" : "MyEgress.ipv4_drop"
         }
       ]
     }
@@ -4179,8 +4135,8 @@
       "name" : "cksum",
       "id" : 0,
       "source_info" : {
-        "filename" : "../p4/asymmetric_countmin.p4",
-        "line" : 239,
+        "filename" : "../p4/p4_packet_management_countmin.p4",
+        "line" : 280,
         "column" : 4,
         "source_fragment" : "update_checksum( ..."
       },
@@ -4242,7 +4198,7 @@
       ["standard_metadata", "priority"]
     ]
   ],
-  "program" : "../p4/asymmetric_countmin.p4i",
+  "program" : "../p4/p4_packet_management_countmin.p4i",
   "__meta__" : {
     "version" : [2, 23],
     "compiler" : "https://github.com/p4lang/p4c"

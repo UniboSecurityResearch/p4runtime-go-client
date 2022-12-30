@@ -1,9 +1,9 @@
-# 0 "../p4/asymmetric_countmin.p4"
-# 0 "<built-in>"
-# 0 "<command-line>"
+# 1 "../p4/asymmetric_countmin.p4"
+# 1 "<built-in>"
+# 1 "<command-line>"
 # 1 "../p4/asymmetric_countmin.p4"
 /* -*- P4_16 -*- */
-# 1 "/usr/local/share/p4c/p4include/core.p4" 1
+# 1 "/usr/share/p4c/p4include/core.p4" 1
 /*
 Copyright 2013-present Barefoot Networks, Inc.
 
@@ -86,19 +86,8 @@ match_kind {
     /// Longest-prefix match.
     lpm
 }
-
-/// Static assert evaluates a boolean expression
-/// at compilation time.  If the expression evaluates to
-/// false, compilation is stopped and the corresponding message is printed.
-/// The function returns a boolean, so that it can be used
-/// as a global constant value in a program, e.g.:
-/// const bool _check = static_assert(V1MODEL_VERSION > 20180000, "Expected a v1 model version >= 20180000");
-extern bool static_assert(bool check, string message);
-
-/// Like the above but using a default message.
-extern bool static_assert(bool check);
 # 3 "../p4/asymmetric_countmin.p4" 2
-# 1 "/usr/local/share/p4c/p4include/v1model.p4" 1
+# 1 "/usr/share/p4c/p4include/v1model.p4" 1
 /*
 Copyright 2013-present Barefoot Networks, Inc.
 
@@ -141,7 +130,7 @@ limitations under the License.
 
 
 
-# 1 "/usr/local/share/p4c/p4include/core.p4" 1
+# 1 "/usr/share/p4c/p4include/core.p4" 1
 /*
 Copyright 2013-present Barefoot Networks, Inc.
 
@@ -159,7 +148,7 @@ limitations under the License.
 */
 
 /* This is the P4-16 core library, which declares some built-in P4 constructs using P4 */
-# 44 "/usr/local/share/p4c/p4include/v1model.p4" 2
+# 44 "/usr/share/p4c/p4include/v1model.p4" 2
 
 
 
@@ -886,6 +875,8 @@ package V1Switch<H, M>(Parser<H, M> p,
 # 4 "../p4/asymmetric_countmin.p4" 2
 
 
+
+
 //microseconds
 
 
@@ -983,6 +974,8 @@ struct metadata {
 
    bit<48> min_flow;
    bit<48> min_flow_opp;
+
+   bit<16> hitorsuspect;
 }
 
 struct digest_t {
@@ -1009,10 +1002,14 @@ struct digest_t {
 
    //change config
    bit<16> swap;
-}
-# 17 "../p4/asymmetric_countmin.p4" 2
 
-//#include "includes/registers.p4"
+   //hit or not, for ML -> Stage 1: it means if the digest needs to be trated as supect, 
+   //                      Stage 2: it means if the digest must be trated as prefiltered    //                               traffic or not prefiltered  
+   //                      =0 -> normal mirror, =1 -> hit, =2 -> suspect
+   bit<16> hitorsuspect;
+
+}
+# 19 "../p4/asymmetric_countmin.p4" 2
 
 # 1 "../p4/includes/parser.p4" 1
 
@@ -1095,84 +1092,6 @@ parser MyParser(packet_in packet,
 }
 # 21 "../p4/asymmetric_countmin.p4" 2
 
-/*************************************************************************
-*********************** H E A D E R S  ***********************************
-*************************************************************************/
-
-/*
-header ethernet_t {
-    macAddr_t dstAddr;
-    macAddr_t srcAddr;
-    bit<16>   etherType;
-}
-
-header ipv4_t {
-    bit<4>    version;
-    bit<4>    ihl;
-    bit<8>    diffserv;
-    bit<16>   totalLen;
-    bit<16>   identification;
-    bit<3>    flags;
-    bit<13>   fragOffset;
-    bit<8>    ttl;
-    bit<8>    protocol;
-    bit<16>   hdrChecksum;
-    ip4Addr_t srcAddr;
-    ip4Addr_t dstAddr;
-    ip4Addr_t realsrcAddr;
-    ip4Addr_t realdstAddr;
-}
-
-struct metadata {
-    bit<48> min_flow;
-    bit<48> min_flow_opp;
-}
-
-struct headers {
-    ethernet_t   ethernet;
-    ipv4_t       ipv4;
-}
-
-struct digest_t {
-    bit<16> type; //=0, asymmetric
-    ip4Addr_t srcAddr;
-    ip4Addr_t dstAddr;
-    bit<9>    srcPort;
-    bit<9>    dstPort;
-//    bit<32>   flow;
-    bit<8>  swap;
-}
-*/
-
-/*************************************************************************
-*********************** P A R S E R  ***********************************
-*************************************************************************/
-
-/*
-parser MyParser(packet_in packet,
-                out headers hdr,
-                inout metadata meta,
-                inout standard_metadata_t standard_metadata) {
-
-    state start {
-        transition parse_ethernet;
-    }
-
-    state parse_ethernet {
-        packet.extract(hdr.ethernet);
-        transition select(hdr.ethernet.etherType) {
-            TYPE_IPV4: parse_ipv4;
-            default: accept;
-        }
-    }
-
-    state parse_ipv4 {
-        packet.extract(hdr.ipv4);
-        transition accept;
-    }
-
-}
-*/
 
 /*************************************************************************
 ************   C H E C K S U M    V E R I F I C A T I O N   *************
@@ -1195,7 +1114,7 @@ control MyIngress(inout headers hdr,
     register<bit<48>>(1024) pkt_count_1;
     register<bit<48>>(1024) flow_count_treshold;
     register<bit<48>>(1024) last_seen;
-
+    register<bit<16>>(1024) count_sample;
 
     action drop() {
         mark_to_drop(standard_metadata);
@@ -1212,21 +1131,22 @@ control MyIngress(inout headers hdr,
     action send_digest() {
         digest<digest_t>(0, {
                 0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
+                meta.ingress_timestamp,
+                meta.packet_length,
+                meta.ip_flags,
+                meta.tcp_len,
+                meta.tcp_ack,
+                meta.tcp_flags,
+                meta.tcp_window_size,
+                meta.udp_len,
+                meta.icmp_type,
+                meta.srcPort,
+                meta.dstPort,
                 meta.src_ip,
                 meta.dst_ip,
-                0,
-                meta.swap});
+                meta.ip_upper_protocol,
+                meta.swap,
+                meta.hitorsuspect});
     }
 
 
@@ -1279,6 +1199,11 @@ control MyIngress(inout headers hdr,
             bit<48> last_time;
             bit<48> diff_time;
             bit<48> diff_pkt_cnt;
+            bit<16> count;
+
+            //read_count
+            count_sample.read(count, 0);
+            count_sample.write(0, count + 1);
 
             // compute flow index 0
             hash(flow0, HashAlgorithm.crc32, 10w0, {hdr.ipv4.srcAddr, 7w11, hdr.ipv4.dstAddr}, 10w1023);
@@ -1321,7 +1246,8 @@ control MyIngress(inout headers hdr,
                 flow_count_treshold.read(flow_hit, flow0);
                 if(flow_hit == (bit<48>)0) {
                     flow_count_treshold.write(flow0, (bit<48>)1);
-                    send_digest();
+                    meta.hitorsuspect = 2;
+                    //send_digest();
                 }
             }
 
@@ -1344,6 +1270,14 @@ control MyIngress(inout headers hdr,
 
                 //sending swap signal
                 meta.swap = 1;
+                //send_digest();      
+            }
+
+            if(count == 10){
+                send_digest();
+                count_sample.write(0, 0);
+            }
+            if(meta.swap == 1 || meta.hitorsuspect == 2){
                 send_digest();
             }
         }
@@ -1353,11 +1287,20 @@ control MyIngress(inout headers hdr,
 /*************************************************************************
 ****************  E G R E S S   P R O C E S S I N G   *******************
 *************************************************************************/
-
+register<bit<48>>(2) latencyReg;
 control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
-    apply { }
+    apply {
+        bit<48> latency;
+        bit<48> counterLatency;
+        if(hdr.ipv4.isValid()){
+            latencyReg.read(latency, 0);
+            latencyReg.write(0, latency + standard_metadata.egress_global_timestamp - standard_metadata.ingress_global_timestamp);
+            latencyReg.read(counterLatency, 1);
+            latencyReg.write(1, counterLatency + (bit<48>)1);
+        }
+    }
 }
 
 /*************************************************************************
