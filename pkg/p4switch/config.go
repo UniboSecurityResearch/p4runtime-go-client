@@ -26,7 +26,7 @@ func (sw *GrpcSwitch) ChangeConfig(ctx context.Context,newConfig *SwitchConfig) 
 	if _, err := sw.p4RtC.SaveFwdPipeFromBytes(ctx,sw.readBin(), sw.readP4Info(), 0); err != nil {
 		return err
 	}
-	sw.InitiateConfig(ctx)
+	sw.InitiateConfig(ctx, sw.configNameAlt)
 	sw.EnableDigest(ctx)
 	time.Sleep(defaultWait)
 	if _, err := sw.p4RtC.CommitFwdPipe(ctx); err != nil {
@@ -42,7 +42,7 @@ func (sw *GrpcSwitch) ChangeConfigSync(ctx context.Context,newConfig *SwitchConf
 	if _, err := sw.p4RtC.SetFwdPipeFromBytes(ctx,sw.readBin(), sw.readP4Info(), 0); err != nil {
 		return err
 	}
-	sw.InitiateConfig(ctx)
+	sw.InitiateConfig(ctx, sw.configNameAlt)
 	sw.EnableDigest(ctx)
 
 	return nil
@@ -73,9 +73,9 @@ func (sw *GrpcSwitch) RemoveTableEntry(ctx context.Context,entry *p4_v1.TableEnt
 }
 
 // Returns the actual configuration of the switch, if config is nil (like when the switch is first started) tries to read the configuration from file .yml
-func (sw *GrpcSwitch) GetConfig() (*SwitchConfig, error) {
+func (sw *GrpcSwitch) GetConfig(configName string) (*SwitchConfig, error) {
 	if sw.config == nil {
-		config, err := parseSwConfig(sw.GetName(), sw.initialConfigName)
+		config, err := parseSwConfig(sw.GetName(), configName)
 		if err != nil {
 			return nil, err
 		}
@@ -102,8 +102,8 @@ func parseSwConfig(swName string, configFileName string) (*SwitchConfig, error) 
 }
 
 // Use this function when switch is started or when the configuration is changed, it gets rules from configuration and add them into the switch
-func (sw *GrpcSwitch) InitiateConfig(ctx context.Context) error {
-	config, err := sw.GetConfig()
+func (sw *GrpcSwitch) InitiateConfig(ctx context.Context, configName string) error {
+	config, err := sw.GetConfig(configName)
 	if err != nil {
 		return err
 	}

@@ -19,21 +19,23 @@ const (
 	defaultWait = 250 * time.Millisecond
 )
 
-func CreateSwitch(deviceID uint64, configName string, ports int, certFile string) *GrpcSwitch {
+func CreateSwitch(deviceID uint64, configName string, configNameAlt string, ports int, certFile string) *GrpcSwitch {
 	return &GrpcSwitch{
-		id:                deviceID,
-		initialConfigName: configName,
-		ports:             ports,
-		addr:              fmt.Sprintf("%s:%d", defaultAddr, defaultPort+deviceID),
-		log:               log.WithField("ID", deviceID),
-		certFile:          certFile,
+		id:            		deviceID,
+		configName:			configName,
+		configNameAlt: 		configNameAlt,
+		initialConfigName: 	configName,
+		ports:             	ports,
+		addr:              	fmt.Sprintf("%s:%d", defaultAddr, defaultPort+deviceID),
+		log:               	log.WithField("ID", deviceID),
+		certFile:          	certFile,
 	}
 	// GrpcSwitch (sw.go) contiene anche:
 	//	- p4RtC      *client.Client		--inizializzato in RunSwitch
 	//	- messageCh  chan *p4_v1.StreamMessageResponse
 }
 
-func (sw *GrpcSwitch) RunSwitch(ct context.Context) error {
+func (sw *GrpcSwitch) RunSwitch(ct context.Context, stateHandler *StateHandler) error {
 
 	sw.log.Infof("Connecting to server at %s", sw.addr)
 	var creds credentials.TransportCredentials
@@ -87,12 +89,17 @@ func (sw *GrpcSwitch) RunSwitch(ct context.Context) error {
 	sw.log.Debug("Setted forwarding pipe")
 	//
 	sw.errCh = make(chan error, 1)
-	go sw.handleStreamMessages(ctx)
+	go sw.handleStreamMessages(ctx, stateHandler)
 	go sw.startRunner(ctx, cancel)
 	//
-	sw.InitiateConfig(ctx)
+	sw.InitiateConfig(ctx, sw.initialConfigName)
 	sw.EnableDigest(ctx)
-	//
+
+	//Part of the code that keeps the state
+	//if(sw.GetNameOfPipeline() == "asymmetric_countmin.p4" || sw.GetNameOfPipeline() == "p4_packet_management_countmin.p4"){
+	//	stateHandler = CreateStateHandler()
+	//}
+	//sw.log.Infof("State Handler %v",stateHandler)
 	sw.log.Info("Switch started")
 	return nil
 }
@@ -114,14 +121,14 @@ func (sw *GrpcSwitch) startRunner(ctx context.Context, cancel context.CancelFunc
 	}
 }
 
-func (sw *GrpcSwitch) handleStreamMessages(ctx context.Context) {
+func (sw *GrpcSwitch) handleStreamMessages(ctx context.Context, stateHandler *StateHandler) {
 	for message := range sw.messageCh {
 		switch m := message.Update.(type) {
 		case *p4_v1.StreamMessageResponse_Packet:
 			sw.log.Debug("Received Packetin")
 		case *p4_v1.StreamMessageResponse_Digest:
-			sw.log.Trace("Received DigestList")
-			sw.HandleDigest(ctx,m.Digest)
+			//sw.log.Trace("Received DigestList")
+			sw.HandleDigest(ctx, m.Digest, stateHandler)
 		case *p4_v1.StreamMessageResponse_IdleTimeoutNotification:
 			sw.log.Trace("Received IdleTimeoutNotification")
 		case *p4_v1.StreamMessageResponse_Error:

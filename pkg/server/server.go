@@ -52,7 +52,7 @@ var programNames []string
 var topologyFilePath string
 var ctx context.Context
 
-func StartServer(switches []*p4switch.GrpcSwitch, topology string, ctx_dummy context.Context) {
+func StartServer(switches []*p4switch.GrpcSwitch, topology string, stateHandler *p4switch.StateHandler, ctx_dummy context.Context) {
 	allSwitches = switches
 	topologyFilePath = topology
 	ctx = ctx_dummy
@@ -62,7 +62,14 @@ func StartServer(switches []*p4switch.GrpcSwitch, topology string, ctx_dummy con
 	http.HandleFunc("/removeRule", removeRule)
 	http.HandleFunc("/executeProgram", executeProgram)
 	http.HandleFunc("/topology", getTopology)
+	http.HandleFunc("/ddos", getDDoS)
 	http.HandleFunc("/getTopologyData", getTopologyData)
+
+	http.HandleFunc("/getSuspectFlows", GetSuspectFlows(stateHandler))
+	http.HandleFunc("/getCollectedDigests", GetCollectedDigests(stateHandler))
+	http.HandleFunc("/dropFlow", DropFlow(stateHandler))
+	http.HandleFunc("/updateDroppedFlow", UpdateDroppedFlow(stateHandler))
+	http.HandleFunc("/undropFlow", UndropFlow(stateHandler))
 
 	http.Handle("/web/", http.StripPrefix("/web/", http.FileServer(http.Dir(serverPath+"web"))))
 
@@ -130,6 +137,17 @@ func getRoot(w http.ResponseWriter, r *http.Request) {
 func getTopology(w http.ResponseWriter, r *http.Request) {
 
 	tmpl := template.Must(template.ParseFiles(serverPath + "topology.html"))
+
+	err := tmpl.Execute(w, nil)
+
+	if err != nil {
+		log.Errorf(err.Error())
+	}
+}
+
+func getDDoS(w http.ResponseWriter, r *http.Request) {
+
+	tmpl := template.Must(template.ParseFiles(serverPath + "ddos.html"))
 
 	err := tmpl.Execute(w, nil)
 

@@ -11,7 +11,7 @@ import (
 
 type Rule struct {
 	Table       string
-	Keys        []Key
+	Keys        []Key 
 	Action      string
 	ActionParam []string `yaml:"action_param"` 
 	Describer   *RuleDescriber
@@ -46,7 +46,7 @@ type SwitchConfig struct {
 
 // Return rules actually installed into the switch, supposing controller is the only one who can add rules, so returns only rules added by controller
 func (sw *GrpcSwitch) GetInstalledRules() []Rule {
-	config, err := sw.GetConfig()
+	config, err := sw.GetConfig(sw.configName)
 	if err != nil {
 		sw.log.Errorf("Error getting config of switch: %v", err)
 		return nil
@@ -65,7 +65,7 @@ func (sw *GrpcSwitch) AddRule(ctx context.Context,rule Rule) error {
 		return err
 	}
 
-	config, err := sw.GetConfig()
+	config, err := sw.GetConfig(sw.configName)
 	if err != nil {
 		sw.log.Errorf("Error getting config of switch: %v", err)
 		return err
@@ -91,7 +91,7 @@ func (sw *GrpcSwitch) RemoveRule(ctx context.Context,idx int) error {
 		return err
 	}
 
-	config, err := sw.GetConfig()
+	config, err := sw.GetConfig(sw.configName)
 	if err != nil {
 		sw.log.Errorf("Error getting config of switch: %v", err)
 		return err
@@ -102,7 +102,7 @@ func (sw *GrpcSwitch) RemoveRule(ctx context.Context,idx int) error {
 
 // Return name of P4 program actually executing into the switch
 func (sw *GrpcSwitch) GetProgramName() string {
-	config, err := sw.GetConfig()
+	config, err := sw.GetConfig(sw.configName)
 	if err != nil {
 		sw.log.Errorf("Error getting program name: %v", err)
 		return ""
@@ -111,7 +111,7 @@ func (sw *GrpcSwitch) GetProgramName() string {
 }
 
 func (sw *GrpcSwitch) GetDigests() []string {
-	config, err := sw.GetConfig()
+	config, err := sw.GetConfig(sw.configName)
 	if err != nil {
 		sw.log.Errorf("Error getting digest list: %v", err)
 		return make([]string, 0)
@@ -127,24 +127,23 @@ func CreateTableEntry(sw *GrpcSwitch, rule Rule) (*p4_v1.TableEntry, error) {
 	if descr == nil {
 		return nil, fmt.Errorf("Error getting describer for rule, see log for more info")
 	}
-	sw.log.Infof("Descr: %v",descr) //
+	//w.log.Infof("Descr: %v",descr) //
 	rule.Describer = descr
 	
-	sw.log.Infof("Rule: %v", rule.Describer.Keys[0].Name)
-	interfaces := parseKeys(rule.Keys, rule.Describer.Keys, rule.Describer.Keys[0].Name)
-	sw.log.Infof("Table: %v", rule.Table)
-	sw.log.Infof("Table_Alt: %v", rule.Describer.TableName)
+	//sw.log.Infof("Rule: %v", rule.Describer.Keys[0].Name)
+	interfaces := parseKeys(rule.Keys, rule.Describer.Keys) //, rule.Describer.Keys[0].Name
+	//sw.log.Infof("Table: %v", rule.Table)
+	//sw.log.Infof("Table_Alt: %v", rule.Describer.TableName)
 	if interfaces == nil {
 		return nil, fmt.Errorf("Error parsing keys of rule, see log for more info")
 	}
-	
 	parserActParam := getParserForActionParams("default")
-	sw.log.Infof("ParserAct: %v", parserActParam)
+	//sw.log.Infof("ParserAct: %v", parserActParam)
 	actionParams := parserActParam.parse(rule.ActionParam, rule.Describer.ActionParams)
 	if actionParams == nil {
 		return nil, fmt.Errorf("Error parsing action parameters of rule, see log for more info")
 	}
-	sw.log.Infof("ActionParams: %v", actionParams)
+	//sw.log.Infof("ActionParams: %v", actionParams)
 
 	return sw.p4RtC.NewTableEntry(
 		rule.Table,
@@ -156,17 +155,19 @@ func CreateTableEntry(sw *GrpcSwitch, rule Rule) (*p4_v1.TableEntry, error) {
 
 // Util function, gets all the keys of a rule and returns the parsed MatchInterfaces
 // This function was modified due to the fact that at the current state (27/10/2022) the client needs a map instead of a slice
-func parseKeys(keys []Key, describers []FieldDescriber, tableName string) map[string]client.MatchInterface {
+func parseKeys(keys []Key, describers []FieldDescriber) map[string]client.MatchInterface {
 	result := make(map[string]client.MatchInterface, len(keys))
 	//result := make([]client.MatchInterface,len(keys))
 	for idx, key := range keys {
+		tableName := describers[idx].Name
 		parserMatch := getParserForKeys(describers[idx].MatchType)
 		result[tableName] = parserMatch.parse(key, describers[idx])
 		/*if result[tableName] == nil {
 			return nil
 		}*/
-		fmt.Printf("Key: %v\n", key)
-		fmt.Printf("Result: %v\n", result[tableName])
+		//fmt.Printf("tableName: %v\n", tableName)
+		//fmt.Printf("Key: %v\n", key)
+		//fmt.Printf("Result: %v\n", result[tableName])
 	}
 	return result
 }

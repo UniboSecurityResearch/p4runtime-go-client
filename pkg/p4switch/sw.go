@@ -10,6 +10,8 @@ import (
 
 type GrpcSwitch struct {
 	id                uint64
+	configName string
+	configNameAlt string 
 	initialConfigName string
 	config            *SwitchConfig
 	ports             int
@@ -23,6 +25,10 @@ type GrpcSwitch struct {
 
 func (sw *GrpcSwitch) GetName() string {
 	return "s" + strconv.FormatUint(sw.id, 10)
+}
+
+func (sw *GrpcSwitch) GetNameOfPipeline() string {
+	return sw.config.Program + ".p4"
 }
 
 func (sw *GrpcSwitch) GetLogger() *log.Entry {
