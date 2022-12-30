@@ -1,4 +1,4 @@
-# p4runtime-go-client
+# p4runtime-go-client - WIP CNN interaction
 Go client for P4Runtime
 
 **This project is still a work in progress. We make no guarantee for the
@@ -8,6 +8,8 @@ Go client for P4Runtime
 For a good place to start, check out the [l2_switch
 example](cmd/l2_switch/README.md).
 
+
+![Alt text](arch.jpg?raw=true "Architecture")
 
 ## p4 controller
 
