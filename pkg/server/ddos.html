@@ -7,8 +7,10 @@
     <title>Network topology</title>
     <link href='./web/css/bootstrap/bootstrap.min.css' rel='stylesheet'>
     <script src='./web/js/bootstrap/bootstrap.bundle.min.js'></script>
-    <script src="./web/js/vis-network.min.js"></script>
     <script src="./web/js/jquery-3.6.0.min.js"></script>
+    <!-- 
+    <script src="./web/js/vis-network.min.js"></script>    
+    -->
 </head>
 
 <body onload="handleTimer()">
@@ -36,7 +38,7 @@
                     </li>
                     <li class='nav-item'>
                         <a class='nav-link active' aria-current='page' href='/ddos'>
-                            DDoS monitoring center
+                            DDoS monitoring page
                         </a>
                     </li>
 		</ul>
@@ -47,17 +49,36 @@
     <div class='d-flex flex-column container-fluid align-items-center mt-5 mb-5'>
         <div class='col-12 row justify-content-center mt-4'>
             <div class='col-12 col-sm-6 col-lg-4 col-xl-3 mb-3 mt-lg-0 align-items-center'>
-                <h2 class='mb-3'>DDoS monitoring center:</h2>
+                <h2 class='mb-3'>DDoS monitoring:</h2>
                 This page shows if a DDoS attack is happening
             </div>
-            <div class='col-12 col-sm-6 col-lg-4 col-xl-4 mb-3 mt-lg-0 align-items-center text-center form-check-inline form-switch'>
-                    <input class="form-check-input" type="checkbox" role="switch" id="checkAutomaticUpdate" checked>
-                    <label class="h5 form-check-label" for="checkAutomaticUpdate">Enable automatic update every <output id="numSec">10</output> seconds</label>
-
-                    <input type="range" min="1" max="19" step="1" value="10" class="form-range" id="secondsRange"oninput="$('#numSec').text(this.value)">
+            <div class='col-12 col-sm-3 col-lg-4 col-xl-4 mb-3 mt-lg-0 align-items-center'>
+                <div class='mb-3'>
+                    <h2>Status:</h2>
+                    <p id='statusdiv'></p>
+                </div>   
+            </div>
+            <div id='mystatus' class='col-12 col-sm-3 col-lg-4 col-xl-4 mb-3 mt-lg-0 align-items-center'>
+                    <div id='mystatusparent'></div>
             </div>
         </div>
-        <div id="mynetwork" class="row mt-2" style="width: 100%; height: 500px;">
+        <div class='col-12 row justify-content-center mt-4' style="height: 40%">          
+        </div>
+        <div class='col-12 row justify-content-center mt-4'>
+            <div class='col-12 col-sm-6 col-lg-4 col-xl-4 mb-3 mt-lg-0 align-items-center'>
+                <p id="suspectflows" style='font-size: 20pt'></p>
+            </div>
+            <div class='col-12 col-sm-6 col-lg-4 col-xl-4 mb-3 mt-lg-0 align-items-center'>
+                <p id="droppedflows" style='font-size: 20pt'></p>
+            </div>            
+        </div>
+        <div class='col-12 row align-items-baseline mt-4' style='position: fixed; bottom: 0; width: 100%;'>
+            <div class='col-12 col-sm-6 col-lg-4 col-xl-3 mb-3 mt-lg-0'>
+                <p>Monitor the suspect flows <a href="/getSuspectFlows">here</a>.</p>
+            </div>
+            <div class='col-12 col-sm-6 col-lg-4 col-xl-3 mb-3 mt-lg-0'>
+            </div>
+                        
         </div>
     </div>
 
@@ -82,13 +103,13 @@
                 // The type of data we expect back
                 dataType: "json",
             })
-                // Code to run if the request succeeds:
+            // Code to run if the request succeeds:
                 .done(function (json) {
-                    displayTopology(json.nodes, json.edges)
+                    displayAttackStatus(json)
                 })
                 // Code to run if the request fails:
                 .fail(function (xhr, status, errorThrown) {
-                    alert("Sorry, there was a problem getting Topology from server");
+                    alert("Sorry, there was a problem getting the attack status");
                     console.log("Error: " + errorThrown);
                     console.log("Status: " + status);
                 })
@@ -96,44 +117,51 @@
                 .always(function (xhr, status) {
                     timerID = setTimeout(handleTimer, $("#secondsRange").val() * 1000);
                 });
+
         }
-        function displayTopology(nodesData, edgesData) {
-
-            // create an array with nodes
-            var nodes = new vis.DataSet(nodesData);
-
-            // create an array with edges
-            var edges = new vis.DataSet(edgesData);
-
+        function displayAttackStatus(json) {
             // create a network
-            var container = document.getElementById('mynetwork');
+            //console.log(json.length)
+            var statusdiv = document.getElementById('statusdiv');
+            var parent = document.getElementById('mystatusparent');
+            var toReplace = document.getElementById('mystatus');
+            const container = parent.parentNode;
+            
+            var img = document.createElement("img");
 
-            // provide the data in the vis format
-            var data = {
-                nodes: nodes,
-                edges: edges
-            };
-            var options = {
-                groups: {
-                    hosts: {
-                        shape: "image",
-                        image: "./web/img/computer.png",
-                        font: { size: 14, color: "black", face: "sans", background: "white" },
-                    },
-                    switches: {
-                        shape: "image",
-                        image: "./web/img/router.png",
-                        font: { size: 14, color: "black", face: "sans", background: "white" },
-                    },
-                    switchesUnavailable: {
-                        shape: "image",
-                        image: "./web/img/router_unavailable.png",
-                        font: { size: 14, color: "black", face: "sans", background: "white" },
-                    },
-                },
-            };;
+            if(json.length == 0){
+                statusdiv.textContent="The network is safe.";
+                img.src = "./web/img/ok.png";
+            } else{
+                statusdiv.textContent="Warning! There may be an attack!";
+                img.src = "./web/img/notok.png";
 
-            var network = new vis.Network(container, data, options);
+                var suspectflows = document.getElementById('suspectflows');
+                //var suspectflowsnumber = document.getElementById('numbersuspect');
+                var droppedflows = document.getElementById('droppedflows');
+                //var droppedflowsnumber = document.getElementById('numberdropped');
+                
+                var suspect = 0;
+                var dropped = 0;
+
+                for (var i = 0; i < json.length; i++) {
+                    // Iterate over numeric indexes from 0 to 5, as everyone expects.
+                    if(String(json[i].Dropped).valueOf() == "false"){
+                        suspect = suspect + 1;
+                    } else{
+                        dropped = dropped + 1;
+                    }
+                }
+
+                suspectflows.innerHTML='There are ' +'<span style="color:orange;font-weight:bold;font-size:250%">'+ suspect +'</span>'+ ' suspect flows';
+                droppedflows.innerHTML='There are ' +'<span style="color:red;font-weight:bold;font-size:250%">'+ dropped +'</span>'+ ' dropped flows';
+
+
+            }
+
+            parent.appendChild(img)
+
+            container.replaceChild(toReplace,parent)
         }
     </script>
 

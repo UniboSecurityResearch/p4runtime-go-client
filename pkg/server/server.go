@@ -39,6 +39,10 @@ type TopologyJSONData struct {
 	Edges []EdgeTopologyData `json:"edges"`
 }
 
+type AttackJSONData struct {
+	Attack bool `json:"attack"`
+}
+
 const (
 	pathP4folder = "../../cmd/controller/p4/"
 	serverPath   = "../../pkg/server/"
@@ -63,6 +67,7 @@ func StartServer(switches []*p4switch.GrpcSwitch, topology string, stateHandler 
 	http.HandleFunc("/executeProgram", executeProgram)
 	http.HandleFunc("/topology", getTopology)
 	http.HandleFunc("/ddos", getDDoS)
+	http.HandleFunc("/isUnderAttack", isUnderAttack(stateHandler))
 	http.HandleFunc("/getTopologyData", getTopologyData)
 
 	http.HandleFunc("/getSuspectFlows", GetSuspectFlows(stateHandler))
@@ -164,6 +169,24 @@ type NodeTopologyData struct {
 type EdgeTopologyData struct {
 	From int `json:"from"`
 	To   int `json:"to"`
+}
+
+func isUnderAttack(stateHandler *p4switch.StateHandler) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request){
+		size := len(stateHandler.GetDigests())
+		attack := false
+		if(size > 0) {
+			attack = true
+		}
+
+		data := AttackJSONData{
+			Attack: attack,
+		}
+		jsonResult, _ := json.Marshal(data)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonResult)
+	}	
 }
 
 func getTopologyData(w http.ResponseWriter, r *http.Request) {
