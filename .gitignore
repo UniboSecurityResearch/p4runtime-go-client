@@ -26,3 +26,9 @@ bin/
 
 # Ignore IntelliJ project settings file
 .idea
+
+#Ignore pcaps, logs and h5
+.pcap
+log/
+.h5
+
