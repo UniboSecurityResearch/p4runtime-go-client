@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/antoninbas/p4runtime-go-client/pkg/p4switch"
+	"context"
 	"encoding/json"
 	"errors"
 	"html/template"
@@ -10,7 +10,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"context"
+
+	"github.com/antoninbas/p4runtime-go-client/pkg/p4switch"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -58,6 +59,7 @@ func StartServer(switches []*p4switch.GrpcSwitch, topology string, ctx_dummy con
 	ctx = ctx_dummy
 
 	http.HandleFunc("/", getRoot)
+	http.HandleFunc("/getRules", getRules)
 	http.HandleFunc("/addRule", addRule)
 	http.HandleFunc("/removeRule", removeRule)
 	http.HandleFunc("/executeProgram", executeProgram)
@@ -74,6 +76,27 @@ func StartServer(switches []*p4switch.GrpcSwitch, topology string, ctx_dummy con
 		log.Errorf("Error starting server: %s\n", err)
 		os.Exit(1)
 	}
+}
+
+func getRules(w http.ResponseWriter, r *http.Request) {
+	swName := r.URL.Query().Get("switch")
+
+	// Getting gRPC switch by name passed in URL
+	sw := getSwitchByName(swName)
+	if sw == nil {
+		errorMessage = "Failed to add entry: switch not found"
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	jsonData, err := json.Marshal(sw.GetInstalledRules())
+	if err != nil {
+		http.Error(w, "Errore durante la codifica JSON", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
 }
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
@@ -305,7 +328,7 @@ func addRule(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Add the rule to switch sw and write success/failure message
-		res := sw.AddRule(ctx,rule)
+		res := sw.AddRule(ctx, rule)
 
 		if res != nil {
 			errorMessage = "Failed to add entry: " + res.Error()
